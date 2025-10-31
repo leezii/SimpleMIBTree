@@ -62,6 +62,315 @@ def parse_mib_file(file_path):
         logger.error(f"Error parsing MIB file: {str(e)}")
         return {'success': False, 'error': str(e)}
 
+def parse_multiple_mib_files(files):
+    """解析多个MIB文件并返回合并的树形结构"""
+    try:
+        all_objects = []  # 存储所有文件的对象
+        module_info = []  # 存储模块信息
+        saved_files = []   # 保存的文件路径，用于清理
+        
+        # 第一步：解析所有文件
+        for file in files:
+            try:
+                filename = secure_filename(file.filename)
+                file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+                file.save(file_path)
+                saved_files.append(file_path)
+                
+                # 读取并解析文件内容
+                with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
+                    mib_content = f.read()
+                
+                # 解析单个文件的内容
+                file_objects = parse_mib_content_raw(mib_content, filename)
+                
+                # 添加模块信息
+                module_name = os.path.splitext(filename)[0]
+                module_info.append({
+                    'name': module_name,
+                    'filename': filename,
+                    'object_count': len([obj for obj in file_objects if obj['type'] in ['object', 'identifier']])
+                })
+                
+                # 为每个对象添加文件来源信息
+                for obj in file_objects:
+                    obj['source_file'] = filename
+                    obj['source_module'] = module_name
+                
+                all_objects.extend(file_objects)
+                
+            except Exception as e:
+                logger.error(f"Error parsing file {file.filename}: {str(e)}")
+                continue
+        
+        # 清理临时文件
+        for file_path in saved_files:
+            try:
+                os.remove(file_path)
+            except:
+                pass
+        
+        if not all_objects:
+            return {'success': False, 'error': 'No valid MIB objects found in any file'}
+        
+        # 第二步：合并和构建层次结构
+        merged_tree = merge_mib_objects(all_objects)
+        
+        # 计算总对象数量
+        total_objects = len([obj for obj in all_objects if obj['type'] in ['object', 'identifier']])
+        
+        return {
+            'success': True,
+            'tree': merged_tree,
+            'modules': module_info,
+            'total_objects': total_objects
+        }
+        
+    except Exception as e:
+        logger.error(f"Error parsing multiple MIB files: {str(e)}")
+        return {'success': False, 'error': str(e)}
+
+def parse_mib_content_raw(content, filename):
+    """解析MIB内容，返回原始对象列表（不构建层次结构）"""
+    lines = content.split('\n')
+    raw_objects = []
+    current_object = None
+    
+    for line_num, line in enumerate(lines, 1):
+        line = line.strip()
+        if not line or line.startswith('--'):
+            continue
+            
+        # 查找OBJECT-TYPE定义
+        if 'OBJECT-TYPE' in line:
+            object_name = line.split('OBJECT-TYPE')[0].strip()
+            if object_name:
+                current_object = {
+                    'text': object_name,
+                    'type': 'object',
+                    'oid': 'N/A',
+                    'oid_path': [],
+                    'numeric_oid': 'N/A',
+                    'syntax': 'N/A',
+                    'access': 'N/A',
+                    'status': 'N/A',
+                    'description': 'N/A',
+                    'children': []
+                }
+                raw_objects.append(current_object)
+        
+        # 提取SYNTAX
+        elif current_object and 'SYNTAX' in line:
+            syntax = line.replace('SYNTAX', '').strip()
+            current_object['syntax'] = syntax
+        
+        # 提取MAX-ACCESS
+        elif current_object and 'MAX-ACCESS' in line:
+            access = line.replace('MAX-ACCESS', '').strip()
+            current_object['access'] = access
+        
+        # 提取STATUS
+        elif current_object and 'STATUS' in line:
+            status = line.replace('STATUS', '').strip()
+            current_object['status'] = status
+        
+        # 提取OID
+        elif current_object and '::=' in line:
+            oid_part = line.split('::=')[1].strip()
+            current_object['oid'] = oid_part
+            current_object['oid_path'] = parse_oid_path(oid_part)
+            current_object = None
+        
+        # 查找OBJECT IDENTIFIER
+        elif 'OBJECT IDENTIFIER' in line and '::=' in line:
+            parts = line.split('OBJECT IDENTIFIER')
+            if len(parts) >= 2:
+                object_name = parts[0].strip()
+                oid_part = line.split('::=')[1].strip() if '::=' in line else 'N/A'
+                raw_objects.append({
+                    'text': object_name,
+                    'type': 'identifier',
+                    'oid': oid_part,
+                    'oid_path': parse_oid_path(oid_part),
+                    'numeric_oid': 'N/A',
+                    'children': []
+                })
+        
+        # 查找MODULE-IDENTITY
+        elif 'MODULE-IDENTITY' in line:
+            module_name = line.split('MODULE-IDENTITY')[0].strip()
+            if module_name:
+                raw_objects.append({
+                    'text': f"Module: {module_name}",
+                    'type': 'module',
+                    'oid': 'Module Identity',
+                    'oid_path': [],
+                    'numeric_oid': 'Module',
+                    'children': []
+                })
+    
+    return raw_objects
+
+def merge_mib_objects(all_objects):
+    """合并多个MIB文件的对象并构建统一的层次结构"""
+    if not all_objects:
+        return []
+    
+    # 计算数字OID（跨文件）
+    all_objects = calculate_numeric_oids_cross_files(all_objects)
+    
+    # 构建层次结构
+    return build_hierarchy_cross_files(all_objects)
+
+def calculate_numeric_oids_cross_files(raw_objects):
+    """跨文件计算数字OID"""
+    # 创建名称到对象的映射
+    name_to_obj = {}
+    name_to_numeric = {}
+    
+    # 首先收集所有对象名称
+    for obj in raw_objects:
+        clean_name = obj['text'].replace('Module: ', '')
+        name_to_obj[clean_name] = obj
+    
+    # 设置基础OID值（包含标准OID和常见的企业OID）
+    name_to_numeric.update(STANDARD_OID_MAP)
+    
+    # 为每个对象计算数字OID
+    def calculate_oid_for_object(obj):
+        if obj.get('numeric_oid') != 'N/A' and obj.get('numeric_oid') != 'Module':
+            return
+            
+        oid_str = obj.get('oid', '')
+        if not oid_str or oid_str == 'N/A' or oid_str == 'Module Identity':
+            return
+        
+        # 解析OID字符串 如 "{ sampleSystemInfo 1 }"
+        clean_oid = oid_str.strip('{ }')
+        parts = clean_oid.split()
+        
+        if len(parts) >= 2:
+            parent_name = parts[0]
+            child_id = parts[-1]
+            
+            if child_id.isdigit():
+                # 查找父对象的数字OID
+                parent_numeric = None
+                
+                if parent_name in name_to_numeric:
+                    parent_numeric = name_to_numeric[parent_name]
+                elif parent_name in name_to_obj:
+                    # 递归计算父对象
+                    calculate_oid_for_object(name_to_obj[parent_name])
+                    if name_to_obj[parent_name].get('numeric_oid', 'N/A') != 'N/A':
+                        parent_numeric = name_to_obj[parent_name]['numeric_oid']
+                        name_to_numeric[parent_name] = parent_numeric
+                
+                if parent_numeric:
+                    full_oid = parent_numeric + '.' + child_id
+                    obj['numeric_oid'] = full_oid
+                    name_to_numeric[obj['text']] = full_oid
+        
+        elif len(parts) == 1 and parts[0].isdigit():
+            # 直接是数字
+            obj['numeric_oid'] = parts[0]
+    
+    # 多次迭代确保所有依赖都被解析
+    for _ in range(10):  # 增加迭代次数以处理复杂的依赖关系
+        for obj in raw_objects:
+            calculate_oid_for_object(obj)
+    
+    return raw_objects
+
+def build_hierarchy_cross_files(raw_objects):
+    """跨文件构建对象层次结构"""
+    # 创建对象字典，以名称为键
+    obj_dict = {}
+    root_objects = []
+    used_objects = []  # 记录已被作为子节点的对象
+    
+    # 先创建所有对象的字典
+    for obj in raw_objects:
+        clean_name = obj['text'].replace('Module: ', '')
+        obj_dict[clean_name] = obj
+    
+    # 第一步：找到明确的父子关系
+    for obj in raw_objects:
+        if obj['type'] == 'module':
+            continue  # 模块单独处理
+            
+        oid_path = obj.get('oid_path', [])
+        if oid_path:
+            # 尝试找到最直接的父对象（路径中的最后一个）
+            for potential_parent_name in reversed(oid_path):
+                if potential_parent_name in obj_dict:
+                    parent_obj = obj_dict[potential_parent_name]
+                    if parent_obj != obj and obj not in used_objects:
+                        parent_obj['children'].append(obj)
+                        used_objects.append(obj)
+                        break
+    
+    # 第二步：将没有父对象的对象添加到根级
+    for obj in raw_objects:
+        if obj not in used_objects:
+            root_objects.append(obj)
+    
+    # 第三步：按模块组织根级对象
+    return organize_by_modules(root_objects, raw_objects)
+
+def organize_by_modules(root_objects, all_objects):
+    """按模块组织对象"""
+    # 按模块分组
+    modules = {}
+    other_objects = []
+    
+    for obj in all_objects:
+        if obj['type'] == 'module':
+            module_name = obj['text'].replace('Module: ', '')
+            modules[module_name] = obj
+        elif obj not in root_objects:
+            # 这些对象已经被作为子节点添加
+            continue
+        else:
+            other_objects.append(obj)
+    
+    # 创建根节点结构
+    organized = []
+    
+    # 如果有模块，按模块组织
+    if modules:
+        # 创建一个总的根节点
+        root_node = {
+            'text': 'MIB Modules',
+            'type': 'root',
+            'oid': 'Root',
+            'numeric_oid': 'Root',
+            'children': []
+        }
+        
+        for module_name, module_obj in modules.items():
+            # 找到属于这个模块的对象
+            module_objects = [obj for obj in root_objects if obj.get('source_module') == module_name]
+            
+            # 为模块对象添加这些子对象
+            for obj in module_objects:
+                if obj != module_obj and obj not in module_obj['children']:
+                    module_obj['children'].append(obj)
+            
+            root_node['children'].append(module_obj)
+        
+        # 添加不属于任何模块的对象
+        for obj in other_objects:
+            if obj['type'] != 'module' and obj not in root_node['children']:
+                root_node['children'].append(obj)
+        
+        organized.append(root_node)
+    else:
+        # 没有模块，直接返回所有对象
+        organized = root_objects
+    
+    return organized if organized else root_objects
+
 def parse_mib_content(content, filename):
     """全新的MIB内容解析，构建父子关系"""
     lines = content.split('\n')
@@ -366,35 +675,69 @@ def mib_parser():
 @app.route('/upload-mib', methods=['POST'])
 def upload_mib():
     """处理MIB文件上传和解析"""
-    if 'mib_file' not in request.files:
-        return jsonify({'success': False, 'error': 'No file selected'})
-    
-    file = request.files['mib_file']
-    if file.filename == '':
-        return jsonify({'success': False, 'error': 'No file selected'})
-    
-    if file and allowed_file(file.filename):
-        try:
-            filename = secure_filename(file.filename)
-            file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-            file.save(file_path)
-            
-            # 解析MIB文件
-            result = parse_mib_file(file_path)
-            
-            # 清理临时文件
+    # 检查是单文件还是多文件上传
+    if 'mib_file' in request.files:
+        # 单文件上传（向后兼容）
+        file = request.files['mib_file']
+        if file.filename == '':
+            return jsonify({'success': False, 'error': 'No file selected'})
+        
+        if file and allowed_file(file.filename):
             try:
-                os.remove(file_path)
-            except:
-                pass
-            
+                filename = secure_filename(file.filename)
+                file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+                file.save(file_path)
+                
+                # 解析MIB文件
+                result = parse_mib_file(file_path)
+                
+                # 清理临时文件
+                try:
+                    os.remove(file_path)
+                except:
+                    pass
+                
+                return jsonify(result)
+                
+            except Exception as e:
+                logger.error(f"Error processing file: {str(e)}")
+                return jsonify({'success': False, 'error': str(e)})
+        else:
+            return jsonify({'success': False, 'error': 'Invalid file type. Please upload a .mib, .txt, or .my file'})
+    
+    elif 'mib_files' in request.files:
+        # 多文件上传
+        files = request.files.getlist('mib_files')
+        if not files or files[0].filename == '':
+            return jsonify({'success': False, 'error': 'No files selected'})
+        
+        # 验证所有文件
+        valid_files = []
+        invalid_files = []
+        
+        for file in files:
+            if file and allowed_file(file.filename):
+                valid_files.append(file)
+            else:
+                invalid_files.append(file.filename)
+        
+        if invalid_files:
+            return jsonify({'success': False, 'error': f'Invalid file types: {", ".join(invalid_files)}. Please upload only .mib, .txt, or .my files'})
+        
+        if not valid_files:
+            return jsonify({'success': False, 'error': 'No valid files selected'})
+        
+        try:
+            # 解析多个MIB文件
+            result = parse_multiple_mib_files(valid_files)
             return jsonify(result)
             
         except Exception as e:
-            logger.error(f"Error processing file: {str(e)}")
+            logger.error(f"Error processing multiple files: {str(e)}")
             return jsonify({'success': False, 'error': str(e)})
+    
     else:
-        return jsonify({'success': False, 'error': 'Invalid file type. Please upload a .mib, .txt, or .my file'})
+        return jsonify({'success': False, 'error': 'No file selected'})
 
 if __name__ == '__main__':
     app.run(debug=True)

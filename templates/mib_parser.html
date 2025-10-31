@@ -319,8 +319,8 @@
             <div class="upload-area" id="upload-area">
                 <div class="upload-icon">📁</div>
                 <div class="upload-text">点击或拖拽MIB文件到此处</div>
-                <div class="upload-hint">支持 .mib, .txt, .my 格式文件</div>
-                <input type="file" id="file-input" accept=".mib,.txt,.my">
+                <div class="upload-hint">支持 .mib, .txt, .my 格式文件，可选择多个文件</div>
+                <input type="file" id="file-input" accept=".mib,.txt,.my" multiple>
                 <button class="btn" onclick="document.getElementById('file-input').click()">选择文件</button>
             </div>
         </div>
@@ -368,24 +368,43 @@
             uploadArea.classList.remove('dragover');
             const files = e.dataTransfer.files;
             if (files.length > 0) {
-                handleFile(files[0]);
+                handleFiles(files);
             }
         });
 
         fileInput.addEventListener('change', (e) => {
             if (e.target.files.length > 0) {
-                handleFile(e.target.files[0]);
+                handleFiles(e.target.files);
             }
         });
 
-        function handleFile(file) {
-            if (!validateFile(file)) {
+        function handleFiles(files) {
+            // 验证所有文件
+            const validFiles = [];
+            const invalidFiles = [];
+            
+            for (let file of files) {
+                if (validateFile(file)) {
+                    validFiles.push(file);
+                } else {
+                    invalidFiles.push(file.name);
+                }
+            }
+            
+            if (invalidFiles.length > 0) {
+                showAlert(`以下文件格式无效: ${invalidFiles.join(', ')}，请只上传 .mib, .txt, .my 格式文件`, 'error');
+                return;
+            }
+            
+            if (validFiles.length === 0) {
                 showAlert('请选择有效的MIB文件格式 (.mib, .txt, .my)', 'error');
                 return;
             }
 
             const formData = new FormData();
-            formData.append('mib_file', file);
+            for (let file of validFiles) {
+                formData.append('mib_files', file);
+            }
 
             showLoading(true);
             hideAlert();
@@ -399,7 +418,7 @@
                 showLoading(false);
                 if (data.success) {
                     showResults(data);
-                    showAlert('MIB文件解析成功！', 'success');
+                    showAlert(`成功解析 ${validFiles.length} 个MIB文件！`, 'success');
                 } else {
                     showAlert('解析失败: ' + data.error, 'error');
                 }
@@ -432,11 +451,30 @@
         }
 
         function showResults(data) {
-            moduleInfo.innerHTML = `
-                <h3>模块信息</h3>
-                <p><strong>模块名称:</strong> ${data.module}</p>
-                <p><strong>对象数量:</strong> ${data.tree.length}</p>
-            `;
+            let moduleInfoHtml = '<h3>解析结果</h3>';
+            
+            if (data.modules && data.modules.length > 0) {
+                // 多模块情况
+                moduleInfoHtml += `<p><strong>解析的模块数量:</strong> ${data.modules.length}</p>`;
+                moduleInfoHtml += '<div style="margin-top: 10px;">';
+                data.modules.forEach(module => {
+                    moduleInfoHtml += `
+                        <div style="background: #f8fafc; padding: 10px; margin: 5px 0; border-radius: 6px; border-left: 4px solid #4f46e5;">
+                            <strong>${module.name}</strong> - ${module.object_count} 个对象
+                        </div>
+                    `;
+                });
+                moduleInfoHtml += '</div>';
+                moduleInfoHtml += `<p><strong>总对象数量:</strong> ${data.total_objects}</p>`;
+            } else {
+                // 单模块情况（向后兼容）
+                moduleInfoHtml += `
+                    <p><strong>模块名称:</strong> ${data.module}</p>
+                    <p><strong>对象数量:</strong> ${data.tree.length}</p>
+                `;
+            }
+            
+            moduleInfo.innerHTML = moduleInfoHtml;
             
             renderTree(data.tree);
             results.style.display = 'block';

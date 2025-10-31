@@ -1,0 +1,81 @@
+RELATED-MIB DEFINITIONS ::= BEGIN
+
+IMPORTS
+    MODULE-IDENTITY, OBJECT-TYPE, Integer32, enterprises
+        FROM SNMPv2-SMI
+    DisplayString
+        FROM SNMPv2-TC
+    sampleMIB, SampleStatus
+        FROM SAMPLE-MIB;
+
+relatedMIB MODULE-IDENTITY
+    LAST-UPDATED "202312010000Z"
+    ORGANIZATION "Related Organization"
+    CONTACT-INFO 
+        "Contact: Related Admin
+         Email: related@sample.com"
+    DESCRIPTION
+        "This is a related MIB that imports from SAMPLE-MIB."
+    ::= { enterprises 99998 }
+
+-- Related objects
+relatedObjects OBJECT IDENTIFIER ::= { relatedMIB 1 }
+
+-- Performance Monitoring
+relatedPerformance OBJECT IDENTIFIER ::= { relatedObjects 1 }
+
+relatedCpuUsage OBJECT-TYPE
+    SYNTAX Integer32 (0..100)
+    UNITS "percent"
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "The current CPU usage percentage."
+    ::= { relatedPerformance 1 }
+
+relatedMemoryUsage OBJECT-TYPE
+    SYNTAX Integer32 (0..100)
+    UNITS "percent"
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "The current memory usage percentage."
+    ::= { relatedPerformance 2 }
+
+relatedDiskUsage OBJECT-TYPE
+    SYNTAX Integer32 (0..100)
+    UNITS "percent"
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "The current disk usage percentage."
+    ::= { relatedPerformance 3 }
+
+-- Extended System Information (references sampleMIB)
+relatedSystemExt OBJECT IDENTIFIER ::= { relatedObjects 2 }
+
+relatedSystemLocation OBJECT-TYPE
+    SYNTAX DisplayString (SIZE(0..255))
+    MAX-ACCESS read-write
+    STATUS current
+    DESCRIPTION
+        "The physical location of the system."
+    ::= { relatedSystemExt 1 }
+
+relatedSystemContact OBJECT-TYPE
+    SYNTAX DisplayString (SIZE(0..255))
+    MAX-ACCESS read-write
+    STATUS current
+    DESCRIPTION
+        "The contact person for this system."
+    ::= { relatedSystemExt 2 }
+
+relatedSystemStatus OBJECT-TYPE
+    SYNTAX SampleStatus
+    MAX-ACCESS read-write
+    STATUS current
+    DESCRIPTION
+        "The extended system status using imported SampleStatus."
+    ::= { relatedSystemExt 3 }
+
+END

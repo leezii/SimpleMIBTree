@@ -1,0 +1,136 @@
+CHILD-MIB DEFINITIONS ::= BEGIN
+
+IMPORTS
+    MODULE-IDENTITY, OBJECT-TYPE, Integer32, Gauge32, Counter32, enterprises
+        FROM SNMPv2-SMI
+    DisplayString
+        FROM SNMPv2-TC
+    sampleMIB
+        FROM SAMPLE-MIB;
+
+childMIB MODULE-IDENTITY
+    LAST-UPDATED "202312010000Z"
+    ORGANIZATION "Child Organization"
+    CONTACT-INFO 
+        "Contact: Child Admin
+         Email: child@sample.com"
+    DESCRIPTION
+        "This is a child MIB that extends sampleMIB functionality."
+    ::= { sampleMIB 3 }
+
+-- Child objects
+childObjects OBJECT IDENTIFIER ::= { childMIB 1 }
+
+-- Network Statistics
+childNetworkStats OBJECT IDENTIFIER ::= { childObjects 1 }
+
+childNetworkInOctets OBJECT-TYPE
+    SYNTAX Counter32
+    UNITS "octets"
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "The total number of octets received on the network interface."
+    ::= { childNetworkStats 1 }
+
+childNetworkOutOctets OBJECT-TYPE
+    SYNTAX Counter32
+    UNITS "octets"
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "The total number of octets transmitted on the network interface."
+    ::= { childNetworkStats 2 }
+
+childNetworkInPackets OBJECT-TYPE
+    SYNTAX Counter32
+    UNITS "packets"
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "The total number of packets received on the network interface."
+    ::= { childNetworkStats 3 }
+
+childNetworkOutPackets OBJECT-TYPE
+    SYNTAX Counter32
+    UNITS "packets"
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "The total number of packets transmitted on the network interface."
+    ::= { childNetworkStats 4 }
+
+-- Process Monitoring
+childProcessTable OBJECT-TYPE
+    SYNTAX SEQUENCE OF ChildProcessEntry
+    MAX-ACCESS not-accessible
+    STATUS current
+    DESCRIPTION
+        "A table containing information about running processes."
+    ::= { childObjects 2 }
+
+childProcessEntry OBJECT-TYPE
+    SYNTAX ChildProcessEntry
+    MAX-ACCESS not-accessible
+    STATUS current
+    DESCRIPTION
+        "An entry in the process table."
+    INDEX { childProcessIndex }
+    ::= { childProcessTable 1 }
+
+ChildProcessEntry ::= SEQUENCE {
+    childProcessIndex     Integer32,
+    childProcessName      DisplayString,
+    childProcessCpu       Gauge32,
+    childProcessMemory     Gauge32,
+    childProcessStatus     Integer32
+}
+
+childProcessIndex OBJECT-TYPE
+    SYNTAX Integer32 (1..2147483647)
+    MAX-ACCESS not-accessible
+    STATUS current
+    DESCRIPTION
+        "A unique index for this process entry."
+    ::= { childProcessEntry 1 }
+
+childProcessName OBJECT-TYPE
+    SYNTAX DisplayString (SIZE(1..64))
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "The name of this process."
+    ::= { childProcessEntry 2 }
+
+childProcessCpu OBJECT-TYPE
+    SYNTAX Gauge32 (0..100)
+    UNITS "percent"
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "The CPU usage percentage of this process."
+    ::= { childProcessEntry 3 }
+
+childProcessMemory OBJECT-TYPE
+    SYNTAX Gauge32
+    UNITS "kilobytes"
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "The memory usage of this process in kilobytes."
+    ::= { childProcessEntry 4 }
+
+childProcessStatus OBJECT-TYPE
+    SYNTAX Integer32 {
+        running(1),
+        sleeping(2),
+        stopped(3),
+        zombie(4)
+    }
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "The current status of this process."
+    ::= { childProcessEntry 5 }
+
+END
