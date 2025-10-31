@@ -319,8 +319,8 @@
             <div class="upload-area" id="upload-area">
                 <div class="upload-icon">📁</div>
                 <div class="upload-text">点击或拖拽MIB文件到此处</div>
-                <div class="upload-hint">支持 .mib, .txt, .my 格式文件，可选择多个文件</div>
-                <input type="file" id="file-input" accept=".mib,.txt,.my" multiple>
+                <div class="upload-hint">支持 .mib, .txt, .my 格式文件，可选择多个文件，也支持包含MIB文件的ZIP压缩包</div>
+                <input type="file" id="file-input" accept=".mib,.txt,.my,.zip" multiple>
                 <button class="btn" onclick="document.getElementById('file-input').click()">选择文件</button>
             </div>
         </div>
@@ -392,12 +392,12 @@
             }
             
             if (invalidFiles.length > 0) {
-                showAlert(`以下文件格式无效: ${invalidFiles.join(', ')}，请只上传 .mib, .txt, .my 格式文件`, 'error');
+                showAlert(`以下文件格式无效: ${invalidFiles.join(', ')}，请只上传 .mib, .txt, .my, .zip 格式文件`, 'error');
                 return;
             }
             
             if (validFiles.length === 0) {
-                showAlert('请选择有效的MIB文件格式 (.mib, .txt, .my)', 'error');
+                showAlert('请选择有效的MIB文件格式 (.mib, .txt, .my, .zip)', 'error');
                 return;
             }
 
@@ -430,7 +430,7 @@
         }
 
         function validateFile(file) {
-            const validExtensions = ['mib', 'txt', 'my'];
+            const validExtensions = ['mib', 'txt', 'my', 'zip'];
             const fileName = file.name.toLowerCase();
             return validExtensions.some(ext => fileName.endsWith('.' + ext));
         }
@@ -452,6 +452,16 @@
 
         function showResults(data) {
             let moduleInfoHtml = '<h3>解析结果</h3>';
+            
+            // 显示ZIP文件信息
+            if (data.zip_info && data.zip_info.length > 0) {
+                moduleInfoHtml += '<div style="background: #fef3c7; border: 1px solid #fbbf24; border-radius: 6px; padding: 10px; margin-bottom: 15px;">';
+                moduleInfoHtml += '<h4 style="margin: 0 0 8px 0; color: #92400e;">📦 ZIP文件处理信息</h4>';
+                data.zip_info.forEach(zip => {
+                    moduleInfoHtml += `<p style="margin: 4px 0; font-size: 0.9rem;"><strong>${zip.filename}</strong>: 提取了 ${zip.extracted_files} 个MIB文件</p>`;
+                });
+                moduleInfoHtml += '</div>';
+            }
             
             if (data.modules && data.modules.length > 0) {
                 // 多模块情况

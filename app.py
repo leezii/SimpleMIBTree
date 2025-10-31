@@ -6,6 +6,8 @@ from werkzeug.utils import secure_filename
 import json
 import sys
 import re
+import zipfile
+import io
 
 # 标准OID映射表
 STANDARD_OID_MAP = {
@@ -45,7 +47,50 @@ def process_form_data(form_data):
 
 def allowed_file(filename):
     """检查文件扩展名是否允许"""
-    return '.' in filename and filename.rsplit('.', 1)[1].lower() in {'mib', 'txt', 'my'}
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in {'mib', 'txt', 'my', 'zip'}
+
+def extract_zip_file(zip_file):
+    """从ZIP文件中提取MIB文件"""
+    try:
+        # 读取ZIP文件内容到内存
+        zip_content = zip_file.read()
+        zip_file_obj = io.BytesIO(zip_content)
+        
+        extracted_files = []
+        
+        with zipfile.ZipFile(zip_file_obj, 'r') as zip_ref:
+            # 检查ZIP文件是否安全（防止路径遍历攻击）
+            for file_info in zip_ref.infolist():
+                filename = file_info.filename
+                
+                # 跳过目录和危险文件
+                if filename.endswith('/') or '..' in filename or filename.startswith('/'):
+                    continue
+                
+                # 检查文件扩展名是否为MIB文件
+                if '.' in filename and filename.rsplit('.', 1)[1].lower() in {'mib', 'txt', 'my'}:
+                    # 提取文件内容
+                    with zip_ref.open(file_info) as extracted_file:
+                        file_content = extracted_file.read().decode('utf-8', errors='ignore')
+                        
+                        # 创建一个类似文件对象的对象
+                        class FileLikeObject:
+                            def __init__(self, filename, content):
+                                self.filename = filename
+                                self.content = content
+                            
+                            def save(self, path):
+                                with open(path, 'w', encoding='utf-8') as f:
+                                    f.write(self.content)
+                        
+                        extracted_files.append(FileLikeObject(filename, file_content))
+        
+        return extracted_files
+        
+    except zipfile.BadZipFile:
+        raise Exception("无效的ZIP文件格式")
+    except Exception as e:
+        raise Exception(f"解压ZIP文件时出错: {str(e)}")
 
 def parse_mib_file(file_path):
     """解析MIB文件并返回树形结构"""
@@ -684,26 +729,43 @@ def upload_mib():
         
         if file and allowed_file(file.filename):
             try:
-                filename = secure_filename(file.filename)
-                file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-                file.save(file_path)
-                
-                # 解析MIB文件
-                result = parse_mib_file(file_path)
-                
-                # 清理临时文件
-                try:
-                    os.remove(file_path)
-                except:
-                    pass
-                
-                return jsonify(result)
+                # 检查是否是ZIP文件
+                if file.filename.lower().endswith('.zip'):
+                    # 处理ZIP文件
+                    extracted_files = extract_zip_file(file)
+                    if not extracted_files:
+                        return jsonify({'success': False, 'error': 'ZIP文件中没有找到有效的MIB文件 (.mib, .txt, .my)'})
+                    
+                    # 解析ZIP中的所有MIB文件
+                    result = parse_multiple_mib_files(extracted_files)
+                    if result['success']:
+                        result['zip_info'] = {
+                            'filename': file.filename,
+                            'extracted_files': len(extracted_files)
+                        }
+                    return result
+                else:
+                    # 处理单个MIB文件
+                    filename = secure_filename(file.filename)
+                    file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+                    file.save(file_path)
+                    
+                    # 解析MIB文件
+                    result = parse_mib_file(file_path)
+                    
+                    # 清理临时文件
+                    try:
+                        os.remove(file_path)
+                    except:
+                        pass
+                    
+                    return jsonify(result)
                 
             except Exception as e:
                 logger.error(f"Error processing file: {str(e)}")
                 return jsonify({'success': False, 'error': str(e)})
         else:
-            return jsonify({'success': False, 'error': 'Invalid file type. Please upload a .mib, .txt, or .my file'})
+            return jsonify({'success': False, 'error': 'Invalid file type. Please upload a .mib, .txt, .my, or .zip file'})
     
     elif 'mib_files' in request.files:
         # 多文件上传
@@ -714,23 +776,49 @@ def upload_mib():
         # 验证所有文件
         valid_files = []
         invalid_files = []
+        zip_files = []
         
         for file in files:
             if file and allowed_file(file.filename):
-                valid_files.append(file)
+                if file.filename.lower().endswith('.zip'):
+                    zip_files.append(file)
+                else:
+                    valid_files.append(file)
             else:
                 invalid_files.append(file.filename)
         
         if invalid_files:
-            return jsonify({'success': False, 'error': f'Invalid file types: {", ".join(invalid_files)}. Please upload only .mib, .txt, or .my files'})
+            return jsonify({'success': False, 'error': f'Invalid file types: {", ".join(invalid_files)}. Please upload only .mib, .txt, .my, or .zip files'})
         
-        if not valid_files:
+        # 处理ZIP文件
+        all_extracted_files = []
+        zip_info = []
+        
+        for zip_file in zip_files:
+            try:
+                extracted = extract_zip_file(zip_file)
+                if extracted:
+                    all_extracted_files.extend(extracted)
+                    zip_info.append({
+                        'filename': zip_file.filename,
+                        'extracted_files': len(extracted)
+                    })
+            except Exception as e:
+                logger.error(f"Error extracting ZIP file {zip_file.filename}: {str(e)}")
+                return jsonify({'success': False, 'error': f'解压ZIP文件 {zip_file.filename} 时出错: {str(e)}'})
+        
+        # 合并所有文件
+        all_files = valid_files + all_extracted_files
+        
+        if not all_files:
             return jsonify({'success': False, 'error': 'No valid files selected'})
         
         try:
-            # 解析多个MIB文件
-            result = parse_multiple_mib_files(valid_files)
-            return jsonify(result)
+            # 解析所有MIB文件
+            result = parse_multiple_mib_files(all_files)
+            if result['success'] and zip_info:
+                result['zip_info'] = zip_info
+            return result
             
         except Exception as e:
             logger.error(f"Error processing multiple files: {str(e)}")
