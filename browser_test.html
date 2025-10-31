@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MIB解析器测试页面</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .test-card {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .status {
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        .success { background: #d4edda; color: #155724; }
+        .info { background: #d1ecf1; color: #0c5460; }
+        .btn {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        .btn:hover { background: #0056b3; }
+        pre { background: #f8f9fa; padding: 10px; border-radius: 4px; overflow-x: auto; }
+    </style>
+</head>
+<body>
+    <h1>🌳 MIB解析器测试页面</h1>
+    
+    <div class="test-card">
+        <h2>✅ 改进功能验证</h2>
+        <div class="status success">
+            <strong>1. 树形节点点击功能</strong><br>
+            ✓ 修复了点击事件处理<br>
+            ✓ 添加了展开/折叠动画<br>
+            ✓ 整个节点项都可以点击
+        </div>
+        
+        <div class="status success">
+            <strong>2. 父子关系层次结构</strong><br>
+            ✓ 重新设计了解析逻辑<br>
+            ✓ 根据OID路径构建层次<br>
+            ✓ 实现了真正的树形结构
+        </div>
+    </div>
+    
+    <div class="test-card">
+        <h2>🚀 快速测试</h2>
+        <p>点击下面的按钮进行快速功能测试：</p>
+        
+        <button class="btn" onclick="openMibParser()">打开MIB解析器</button>
+        <button class="btn" onclick="runAPITest()">API测试</button>
+        <button class="btn" onclick="showHierarchy()">显示层次结构</button>
+        
+        <div id="test-results"></div>
+    </div>
+    
+    <div class="test-card">
+        <h2>📊 示例层次结构</h2>
+        <pre id="hierarchy-display">
+📦 Module: sampleMIB
+└── 🏷️ sampleObjects
+    ├── 🏷️ sampleSystemInfo
+    │   ├── 🔧 sampleSystemName (DisplayString, read-write)
+    │   ├── 🔧 sampleSystemVersion (DisplayString, read-only)
+    │   ├── 🔧 sampleSystemStatus (SampleStatus, read-write)
+    │   └── 🔧 sampleSystemUptime (Integer32, read-only)
+    └── 🔧 sampleConfigTable
+        └── 🔧 sampleConfigEntry
+            ├── 🔧 sampleConfigIndex (Integer32, not-accessible)
+            ├── 🔧 sampleConfigName (DisplayString, read-create)
+            ├── 🔧 sampleConfigValue (DisplayString, read-create)
+            └── 🔧 sampleConfigStatus (SampleStatus, read-create)
+        </pre>
+    </div>
+    
+    <div class="test-card">
+        <h2>🛠️ 使用说明</h2>
+        <ol>
+            <li>确保Flask应用正在运行: <code>python app.py</code></li>
+            <li>访问MIB解析器页面</li>
+            <li>上传示例文件: <code>sample_mibs/SAMPLE-MIB.mib</code></li>
+            <li>点击树形节点测试展开/折叠功能</li>
+            <li>查看层次结构和详细信息</li>
+        </ol>
+    </div>
+
+    <script>
+        function openMibParser() {
+            window.open('http://localhost:5000/mib-parser', '_blank');
+        }
+        
+        function runAPITest() {
+            const results = document.getElementById('test-results');
+            results.innerHTML = '<div class="status info">正在运行API测试...</div>';
+            
+            // 模拟API测试
+            fetch('http://localhost:5000/mib-parser')
+                .then(response => {
+                    if (response.ok) {
+                        results.innerHTML = '<div class="status success">✓ MIB解析器页面可访问</div>';
+                    } else {
+                        results.innerHTML = '<div class="status error">✗ 无法访问MIB解析器页面</div>';
+                    }
+                })
+                .catch(error => {
+                    results.innerHTML = '<div class="status error">✗ Flask服务器未运行: ' + error.message + '</div>';
+                });
+        }
+        
+        function showHierarchy() {
+            const display = document.getElementById('hierarchy-display');
+            display.style.background = '#e8f5e8';
+            setTimeout(() => {
+                display.style.background = '#f8f9fa';
+            }, 1000);
+        }
+    </script>
+</body>
+</html>

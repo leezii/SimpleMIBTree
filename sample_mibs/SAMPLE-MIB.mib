@@ -1,0 +1,129 @@
+SAMPLE-MIB DEFINITIONS ::= BEGIN
+
+IMPORTS
+    MODULE-IDENTITY, OBJECT-TYPE, Integer32, enterprises
+        FROM SNMPv2-SMI
+    TEXTUAL-CONVENTION, DisplayString
+        FROM SNMPv2-TC
+    MODULE-COMPLIANCE, OBJECT-GROUP
+        FROM SNMPv2-CONF;
+
+sampleMIB MODULE-IDENTITY
+    LAST-UPDATED "202312010000Z"
+    ORGANIZATION "Sample Organization"
+    CONTACT-INFO 
+        "Contact: Sample Admin
+         Email: admin@sample.com"
+    DESCRIPTION
+        "This is a sample MIB for demonstration purposes."
+    ::= { enterprises 99999 }
+
+-- Textual Conventions
+SampleStatus ::= TEXTUAL-CONVENTION
+    STATUS current
+    DESCRIPTION
+        "Sample status enumeration."
+    SYNTAX INTEGER {
+        active(1),
+        inactive(2),
+        pending(3)
+    }
+
+-- Main objects
+sampleObjects OBJECT IDENTIFIER ::= { sampleMIB 1 }
+sampleNotifications OBJECT IDENTIFIER ::= { sampleMIB 2 }
+
+-- System Information
+sampleSystemInfo OBJECT IDENTIFIER ::= { sampleObjects 1 }
+
+sampleSystemName OBJECT-TYPE
+    SYNTAX DisplayString (SIZE(0..255))
+    MAX-ACCESS read-write
+    STATUS current
+    DESCRIPTION
+        "The name of the sample system."
+    ::= { sampleSystemInfo 1 }
+
+sampleSystemVersion OBJECT-TYPE
+    SYNTAX DisplayString (SIZE(0..32))
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "The version of the sample system."
+    ::= { sampleSystemInfo 2 }
+
+sampleSystemStatus OBJECT-TYPE
+    SYNTAX SampleStatus
+    MAX-ACCESS read-write
+    STATUS current
+    DESCRIPTION
+        "The current status of the sample system."
+    ::= { sampleSystemInfo 3 }
+
+sampleSystemUptime OBJECT-TYPE
+    SYNTAX Integer32
+    UNITS "seconds"
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "The uptime of the sample system in seconds."
+    ::= { sampleSystemInfo 4 }
+
+-- Configuration Table
+sampleConfigTable OBJECT-TYPE
+    SYNTAX SEQUENCE OF SampleConfigEntry
+    MAX-ACCESS not-accessible
+    STATUS current
+    DESCRIPTION
+        "A table containing configuration entries."
+    ::= { sampleObjects 2 }
+
+sampleConfigEntry OBJECT-TYPE
+    SYNTAX SampleConfigEntry
+    MAX-ACCESS not-accessible
+    STATUS current
+    DESCRIPTION
+        "An entry in the configuration table."
+    INDEX { sampleConfigIndex }
+    ::= { sampleConfigTable 1 }
+
+SampleConfigEntry ::= SEQUENCE {
+    sampleConfigIndex     Integer32,
+    sampleConfigName      DisplayString,
+    sampleConfigValue     DisplayString,
+    sampleConfigStatus    SampleStatus
+}
+
+sampleConfigIndex OBJECT-TYPE
+    SYNTAX Integer32 (1..2147483647)
+    MAX-ACCESS not-accessible
+    STATUS current
+    DESCRIPTION
+        "A unique index for this configuration entry."
+    ::= { sampleConfigEntry 1 }
+
+sampleConfigName OBJECT-TYPE
+    SYNTAX DisplayString (SIZE(1..64))
+    MAX-ACCESS read-create
+    STATUS current
+    DESCRIPTION
+        "The name of this configuration parameter."
+    ::= { sampleConfigEntry 2 }
+
+sampleConfigValue OBJECT-TYPE
+    SYNTAX DisplayString (SIZE(0..255))
+    MAX-ACCESS read-create
+    STATUS current
+    DESCRIPTION
+        "The value of this configuration parameter."
+    ::= { sampleConfigEntry 3 }
+
+sampleConfigStatus OBJECT-TYPE
+    SYNTAX SampleStatus
+    MAX-ACCESS read-create
+    STATUS current
+    DESCRIPTION
+        "The status of this configuration entry."
+    ::= { sampleConfigEntry 4 }
+
+END

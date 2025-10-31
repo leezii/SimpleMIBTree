@@ -1,0 +1,603 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MIB文件解析器</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+        
+        .header p {
+            opacity: 0.9;
+            font-size: 1.1rem;
+        }
+        
+        .upload-section {
+            padding: 40px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        
+        .upload-area {
+            border: 3px dashed #d1d5db;
+            border-radius: 12px;
+            padding: 60px 40px;
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            background: #f9fafb;
+        }
+        
+        .upload-area:hover {
+            border-color: #4f46e5;
+            background: #f3f4f6;
+            transform: translateY(-2px);
+        }
+        
+        .upload-area.dragover {
+            border-color: #4f46e5;
+            background: #eef2ff;
+        }
+        
+        .upload-icon {
+            font-size: 4rem;
+            color: #9ca3af;
+            margin-bottom: 20px;
+        }
+        
+        .upload-text {
+            font-size: 1.2rem;
+            color: #4b5563;
+            margin-bottom: 15px;
+        }
+        
+        .upload-hint {
+            color: #6b7280;
+            font-size: 0.9rem;
+        }
+        
+        #file-input {
+            display: none;
+        }
+        
+        .btn {
+            background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            margin-top: 20px;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(79, 70, 229, 0.4);
+        }
+        
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        .results-section {
+            padding: 40px;
+            display: none;
+        }
+        
+        .results-header {
+            margin-bottom: 30px;
+        }
+        
+        .results-header h2 {
+            color: #1f2937;
+            font-size: 1.8rem;
+            margin-bottom: 10px;
+        }
+        
+        .module-info {
+            background: #f0f9ff;
+            border: 1px solid #e0f2fe;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .tree-container {
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 20px;
+            background: #ffffff;
+            max-height: 600px;
+            overflow-y: auto;
+        }
+        
+        .tree-node {
+            margin: 5px 0;
+        }
+        
+        .tree-item {
+            padding: 8px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .tree-item:hover {
+            background-color: #f3f4f6;
+        }
+        
+        .tree-item.expanded {
+            background-color: #eef2ff;
+        }
+        
+        .tree-toggle {
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            color: #6b7280;
+        }
+        
+        .tree-icon {
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+        }
+        
+        .tree-text {
+            flex: 1;
+            font-weight: 500;
+            color: #1f2937;
+        }
+        
+        .tree-oid {
+            font-size: 0.85rem;
+            color: #6b7280;
+            font-family: 'Courier New', monospace;
+        }
+        
+        .numeric-oid {
+            font-size: 0.8rem;
+            color: #059669;
+            font-family: 'Courier New', monospace;
+            font-weight: bold;
+            background: #ecfdf5;
+            padding: 2px 6px;
+            border-radius: 4px;
+            margin-left: 8px;
+        }
+        
+        .tree-details {
+            font-size: 0.8rem;
+            color: #9ca3af;
+            margin-left: 48px;
+            padding: 5px 0;
+        }
+        
+        .detail-line {
+            margin: 2px 0;
+        }
+        
+        .tree-children {
+            margin-left: 20px;
+            border-left: 2px solid #e5e7eb;
+            padding-left: 15px;
+            display: none;
+            position: relative;
+        }
+        
+        .tree-children.expanded {
+            display: block;
+            animation: slideDown 0.2s ease-out;
+        }
+        
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                max-height: 0;
+            }
+            to {
+                opacity: 1;
+                max-height: 1000px;
+            }
+        }
+        
+        .tree-children::before {
+            content: '';
+            position: absolute;
+            left: -2px;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: linear-gradient(to bottom, #e5e7eb, transparent);
+        }
+        
+        .alert {
+            padding: 15px 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+            display: none;
+        }
+        
+        .alert.error {
+            background-color: #fef2f2;
+            border: 1px solid #fecaca;
+            color: #dc2626;
+        }
+        
+        .alert.success {
+            background-color: #f0fdf4;
+            border: 1px solid #bbf7d0;
+            color: #16a34a;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 40px;
+            display: none;
+        }
+        
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #f3f4f6;
+            border-top: 4px solid #4f46e5;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .back-btn {
+            background: #6b7280;
+            margin-bottom: 20px;
+        }
+        
+        .back-btn:hover {
+            background: #4b5563;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🌳 MIB文件解析器</h1>
+            <p>上传并解析SNMP MIB文件，以树形结构查看管理信息库</p>
+        </div>
+        
+        <div class="upload-section">
+            <div class="upload-area" id="upload-area">
+                <div class="upload-icon">📁</div>
+                <div class="upload-text">点击或拖拽MIB文件到此处</div>
+                <div class="upload-hint">支持 .mib, .txt, .my 格式文件</div>
+                <input type="file" id="file-input" accept=".mib,.txt,.my">
+                <button class="btn" onclick="document.getElementById('file-input').click()">选择文件</button>
+            </div>
+        </div>
+        
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p>正在解析MIB文件，请稍候...</p>
+        </div>
+        
+        <div class="alert" id="alert"></div>
+        
+        <div class="results-section" id="results">
+            <button class="btn back-btn" onclick="resetParser()">返回上传</button>
+            <div class="results-header">
+                <h2>解析结果</h2>
+                <div class="module-info" id="module-info"></div>
+            </div>
+            <div class="tree-container" id="tree-container">
+                <!-- Tree will be rendered here -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const uploadArea = document.getElementById('upload-area');
+        const fileInput = document.getElementById('file-input');
+        const loading = document.getElementById('loading');
+        const alert = document.getElementById('alert');
+        const results = document.getElementById('results');
+        const treeContainer = document.getElementById('tree-container');
+        const moduleInfo = document.getElementById('module-info');
+
+        // 拖拽事件处理
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        });
+
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('dragover');
+        });
+
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                handleFile(files[0]);
+            }
+        });
+
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                handleFile(e.target.files[0]);
+            }
+        });
+
+        function handleFile(file) {
+            if (!validateFile(file)) {
+                showAlert('请选择有效的MIB文件格式 (.mib, .txt, .my)', 'error');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('mib_file', file);
+
+            showLoading(true);
+            hideAlert();
+
+            fetch('/upload-mib', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                showLoading(false);
+                if (data.success) {
+                    showResults(data);
+                    showAlert('MIB文件解析成功！', 'success');
+                } else {
+                    showAlert('解析失败: ' + data.error, 'error');
+                }
+            })
+            .catch(error => {
+                showLoading(false);
+                showAlert('网络错误: ' + error.message, 'error');
+            });
+        }
+
+        function validateFile(file) {
+            const validExtensions = ['mib', 'txt', 'my'];
+            const fileName = file.name.toLowerCase();
+            return validExtensions.some(ext => fileName.endsWith('.' + ext));
+        }
+
+        function showLoading(show) {
+            loading.style.display = show ? 'block' : 'none';
+            document.querySelector('.upload-section').style.display = show ? 'none' : 'block';
+        }
+
+        function showAlert(message, type) {
+            alert.textContent = message;
+            alert.className = `alert ${type}`;
+            alert.style.display = 'block';
+        }
+
+        function hideAlert() {
+            alert.style.display = 'none';
+        }
+
+        function showResults(data) {
+            moduleInfo.innerHTML = `
+                <h3>模块信息</h3>
+                <p><strong>模块名称:</strong> ${data.module}</p>
+                <p><strong>对象数量:</strong> ${data.tree.length}</p>
+            `;
+            
+            renderTree(data.tree);
+            results.style.display = 'block';
+            document.querySelector('.upload-section').style.display = 'none';
+        }
+
+        function renderTree(treeData) {
+            treeContainer.innerHTML = '';
+            treeData.forEach(node => {
+                const nodeElement = createTreeNode(node);
+                treeContainer.appendChild(nodeElement);
+            });
+        }
+
+        function createTreeNode(node) {
+            const nodeDiv = document.createElement('div');
+            nodeDiv.className = 'tree-node';
+            
+            const itemDiv = document.createElement('div');
+            itemDiv.className = 'tree-item';
+            
+            // 切换按钮
+            const toggle = document.createElement('span');
+            toggle.className = 'tree-toggle';
+            if (node.children && node.children.length > 0) {
+                toggle.textContent = '▶';
+                toggle.style.cursor = 'pointer';
+                // 修复点击事件
+                toggle.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    toggleNode(nodeDiv);
+                });
+            } else {
+                toggle.style.visibility = 'hidden';
+            }
+            
+            // 图标
+            const icon = document.createElement('span');
+            icon.className = 'tree-icon';
+            switch (node.type) {
+                case 'module':
+                    icon.textContent = '📦';
+                    break;
+                case 'object':
+                    icon.textContent = '🔧';
+                    break;
+                case 'identifier':
+                    icon.textContent = '🏷️';
+                    break;
+                case 'error':
+                    icon.textContent = '❌';
+                    break;
+                default:
+                    icon.textContent = '📄';
+            }
+            
+            // 文本
+            const text = document.createElement('span');
+            text.className = 'tree-text';
+            text.textContent = node.text;
+            
+            // OID
+            const oid = document.createElement('span');
+            oid.className = 'tree-oid';
+            oid.textContent = node.oid || '';
+            
+            // 数字OID
+            const numericOid = document.createElement('span');
+            numericOid.className = 'numeric-oid';
+            if (node.numeric_oid && node.numeric_oid !== 'N/A' && node.numeric_oid !== 'Module') {
+                numericOid.textContent = node.numeric_oid;
+            }
+            
+            // 添加点击事件到整个项目
+            itemDiv.style.cursor = 'pointer';
+            itemDiv.addEventListener('click', (e) => {
+                if (node.children && node.children.length > 0) {
+                    toggleNode(nodeDiv);
+                }
+            });
+            
+            itemDiv.appendChild(toggle);
+            itemDiv.appendChild(icon);
+            itemDiv.appendChild(text);
+            if (node.oid && node.oid !== 'N/A') {
+                itemDiv.appendChild(oid);
+            }
+            if (numericOid.textContent) {
+                itemDiv.appendChild(numericOid);
+            }
+            
+            nodeDiv.appendChild(itemDiv);
+            
+            // 添加详细信息
+            if (node.syntax || node.access || node.status) {
+                const details = document.createElement('div');
+                details.className = 'tree-details';
+                
+                if (node.syntax && node.syntax !== 'N/A') {
+                    const syntaxLine = document.createElement('div');
+                    syntaxLine.className = 'detail-line';
+                    syntaxLine.innerHTML = '<strong>Syntax:</strong> ' + node.syntax;
+                    details.appendChild(syntaxLine);
+                }
+                
+                if (node.access && node.access !== 'N/A') {
+                    const accessLine = document.createElement('div');
+                    accessLine.className = 'detail-line';
+                    accessLine.innerHTML = '<strong>Access:</strong> ' + node.access;
+                    details.appendChild(accessLine);
+                }
+                
+                if (node.status && node.status !== 'N/A') {
+                    const statusLine = document.createElement('div');
+                    statusLine.className = 'detail-line';
+                    statusLine.innerHTML = '<strong>Status:</strong> ' + node.status;
+                    details.appendChild(statusLine);
+                }
+                
+                nodeDiv.appendChild(details);
+            }
+            
+            // 子节点
+            if (node.children && node.children.length > 0) {
+                const childrenDiv = document.createElement('div');
+                childrenDiv.className = 'tree-children';
+                node.children.forEach(child => {
+                    const childNode = createTreeNode(child);
+                    childrenDiv.appendChild(childNode);
+                });
+                nodeDiv.appendChild(childrenDiv);
+            }
+            
+            return nodeDiv;
+        }
+
+        function toggleNode(nodeDiv) {
+            const toggle = nodeDiv.querySelector('.tree-toggle');
+            const children = nodeDiv.querySelector('.tree-children');
+            const item = nodeDiv.querySelector('.tree-item');
+            
+            if (children) {
+                const isExpanded = children.classList.contains('expanded');
+                if (isExpanded) {
+                    children.classList.remove('expanded');
+                    item.classList.remove('expanded');
+                    toggle.textContent = '▶';
+                } else {
+                    children.classList.add('expanded');
+                    item.classList.add('expanded');
+                    toggle.textContent = '▼';
+                }
+            }
+        }
+
+        function resetParser() {
+            results.style.display = 'none';
+            document.querySelector('.upload-section').style.display = 'block';
+            hideAlert();
+            fileInput.value = '';
+        }
+    </script>
+</body>
+</html>
