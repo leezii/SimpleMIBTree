@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-测试多MIB文件上传功能的脚本
+Script to test multi-MIB file upload functionality
 """
 
 import requests
@@ -8,8 +8,8 @@ import json
 import os
 
 def test_single_file_upload():
-    """测试单文件上传"""
-    print("=== 测试单文件上传 ===")
+    """Test single file upload"""
+    print("=== Testing Single File Upload ===")
     
     url = 'http://127.0.0.1:5000/upload-mib'
     
@@ -19,20 +19,20 @@ def test_single_file_upload():
     
     if response.status_code == 200:
         data = response.json()
-        print(f"✅ 单文件上传成功")
-        print(f"   模块: {data.get('module')}")
-        print(f"   对象数量: {len(data.get('tree', []))}")
+        print(f"✅ Single file upload successful")
+        print(f"   Module: {data.get('module')}")
+        print(f"   Object count: {len(data.get('tree', []))}")
     else:
-        print(f"❌ 单文件上传失败: {response.status_code}")
+        print(f"❌ Single file upload failed: {response.status_code}")
 
 def test_multi_file_upload():
-    """测试多文件上传"""
-    print("\n=== 测试多文件上传 ===")
+    """Test multi-file upload"""
+    print("\n=== Testing Multi-File Upload ===")
     
     url = 'http://127.0.0.1:5000/upload-mib'
     files = []
     
-    # 添加多个文件
+    # Add multiple files
     file_names = ['SAMPLE-MIB.mib', 'RELATED-MIB.mib', 'CHILD-MIB.mib']
     for file_name in file_names:
         file_path = f'sample_mibs/{file_name}'
@@ -44,28 +44,28 @@ def test_multi_file_upload():
         
         if response.status_code == 200:
             data = response.json()
-            print(f"✅ 多文件上传成功")
-            print(f"   解析的模块数量: {len(data.get('modules', []))}")
-            print(f"   总对象数量: {data.get('total_objects', 0)}")
+            print(f"✅ Multi-file upload successful")
+            print(f"   Number of parsed modules: {len(data.get('modules', []))}")
+            print(f"   Total object count: {data.get('total_objects', 0)}")
             
-            # 显示每个模块的信息
+            # Display information for each module
             for module in data.get('modules', []):
-                print(f"   - {module['name']}: {module['object_count']} 个对象")
+                print(f"   - {module['name']}: {module['object_count']} objects")
         else:
-            print(f"❌ 多文件上传失败: {response.status_code}")
+            print(f"❌ Multi-file upload failed: {response.status_code}")
     
     finally:
-        # 关闭文件
+        # Close files
         for _, file_obj in files:
             file_obj.close()
 
 def test_invalid_files():
-    """测试无效文件上传"""
-    print("\n=== 测试无效文件上传 ===")
+    """Test invalid file upload"""
+    print("\n=== Testing Invalid File Upload ===")
     
     url = 'http://127.0.0.1:5000/upload-mib'
     
-    # 创建一个无效文件
+    # Create an invalid file
     with open('test_invalid.txt', 'w') as f:
         f.write('This is not a MIB file')
     
@@ -76,31 +76,31 @@ def test_invalid_files():
     if response.status_code == 200:
         data = response.json()
         if not data.get('success'):
-            print(f"✅ 正确拒绝了无效文件: {data.get('error')}")
+            print(f"✅ Correctly rejected invalid file: {data.get('error')}")
         else:
-            print(f"❌ 意外接受了无效文件")
+            print(f"❌ Unexpectedly accepted invalid file")
     else:
-        print(f"❌ 请求失败: {response.status_code}")
+        print(f"❌ Request failed: {response.status_code}")
     
-    # 清理测试文件
+    # Clean up test file
     os.remove('test_invalid.txt')
 
 if __name__ == '__main__':
-    print("开始测试多MIB文件上传功能...\n")
+    print("Starting multi-MIB file upload functionality test...\n")
     
-    # 确保Flask应用正在运行
+    # Ensure Flask application is running
     try:
         response = requests.get('http://127.0.0.1:5000/mib-parser')
         if response.status_code != 200:
-            print("❌ Flask应用未运行，请先启动: python3 app.py")
+            print("❌ Flask application not running, please start it first: python3 app.py")
             exit(1)
     except requests.exceptions.ConnectionError:
-        print("❌ 无法连接到Flask应用，请先启动: python3 app.py")
+        print("❌ Cannot connect to Flask application, please start it first: python3 app.py")
         exit(1)
     
-    # 运行测试
+    # Run tests
     test_single_file_upload()
     test_multi_file_upload()
     test_invalid_files()
     
-    print("\n🎉 所有测试完成！")
+    print("\n🎉 All tests completed!")
