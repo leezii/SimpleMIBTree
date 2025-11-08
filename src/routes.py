@@ -9,26 +9,9 @@ logger = logging.getLogger(__name__)
 # 创建蓝图
 main_bp = Blueprint('main', __name__)
 
-def process_form_data(form_data):
-    """处理表单数据的辅助函数"""
-    firstname = form_data.get('firstname', '').strip()
-    lastname = form_data.get('lastname', '').strip()
-    if firstname and lastname:
-        output = firstname + " " + lastname
-        return {'output': f'Your Name is {output}, right?'}
-    return {'error': 'Missing data!'}
-
-@main_bp.route('/', methods=['GET', 'POST'])
-def index():
-    """主页路由"""
-    if request.method == "POST":
-        response = process_form_data(request.form)
-        return jsonify(response)
-    return render_template('index.html')
-
-@main_bp.route('/mib-parser')
+@main_bp.route('/')
 def mib_parser_page():
-    """MIB 解析器页面"""
+    """MIB 解析器页面（主页）"""
     return render_template('mib_parser.html')
 
 @main_bp.route('/upload-mib', methods=['POST'])
