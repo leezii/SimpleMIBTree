@@ -56,7 +56,7 @@ pip install -r requirements.txt
 
 ### 4. 运行应用
 ```bash
-python app.py
+cd src && python app.py
 ```
 
 应用将在 http://localhost:5000 启动
@@ -111,17 +111,28 @@ python test_mib_parser.py
 
 ```
 flask_web/
-├── app.py                 # Flask应用主文件
+├── src/                    # 源代码目录
+│   ├── app.py             # 主应用文件
+│   ├── config.py          # 配置文件
+│   ├── routes.py          # 路由模块
+│   ├── file_handler.py    # 文件处理模块
+│   └── mib_parser.py     # MIB解析模块
+├── tests/                 # 测试文件
+│   ├── test_mib_parser.py # MIB解析器测试
+│   ├── test_multi_mib.py  # 多文件上传测试
+│   └── test_zip_upload.py # ZIP文件上传测试
+├── test_data/            # 测试数据
+│   ├── sample_mibs/      # 示例MIB文件
+│   └── test_mibs.zip    # 测试ZIP包
+├── examples/             # 示例
+│   └── browser_test.html # 浏览器测试页面
+├── templates/            # 模板文件
+│   ├── index.html        # 首页
+│   └── mib_parser.html   # MIB解析器页面
+├── uploads/              # 上传文件目录
 ├── requirements.txt       # Python依赖包
 ├── README.md             # 项目说明文档
-├── test_mib_parser.py    # 测试脚本
-├── templates/            # HTML模板
-│   ├── index.html        # 首页
-│   ├── hello.html        # 示例页面
-│   └── mib_parser.html   # MIB解析器页面
-├── sample_mibs/          # 示例MIB文件
-│   └── SAMPLE-MIB.mib   # 示例MIB
-├── uploads/              # 上传文件临时目录
+├── DEPLOYMENT.md         # 部署说明
 └── venv/                 # Python虚拟环境
 ```
 

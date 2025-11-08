@@ -92,10 +92,10 @@ if __name__ == '__main__':
     try:
         response = requests.get('http://127.0.0.1:5000/mib-parser')
         if response.status_code != 200:
-            print("❌ Flask application not running, please start it first: python3 src/app.py")
+            print("❌ Flask application not running, please start it first: cd src && python app.py")
             exit(1)
     except requests.exceptions.ConnectionError:
-        print("❌ Cannot connect to Flask application, please start it first: python3 src/app.py")
+        print("❌ Cannot connect to Flask application, please start it first: cd src && python app.py")
         exit(1)
     
     # Run tests

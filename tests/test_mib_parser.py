@@ -52,7 +52,7 @@ def test_mib_parser():
                 print(f"错误: {result.get('error', 'Unknown error')}")
                 
         except requests.exceptions.ConnectionError:
-            print("错误: 无法连接到Flask服务器。请确保服务器正在运行 (python src/app.py)")
+            print("错误: 无法连接到Flask服务器。请确保服务器正在运行 (cd src && python app.py)")
         except Exception as e:
             print(f"错误: {str(e)}")
 

@@ -60,6 +60,7 @@ def test_zip_upload():
             
     except requests.exceptions.ConnectionError:
         print("❌ Cannot connect to Flask server, please ensure server is running at http://127.0.0.1:5000")
+        print("   Start server with: cd src && python app.py")
     except Exception as e:
         print(f"❌ Test failed: {str(e)}")
 
