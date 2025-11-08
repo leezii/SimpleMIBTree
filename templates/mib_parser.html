@@ -124,12 +124,45 @@
         
         .results-header {
             margin-bottom: 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
         }
         
-        .results-header h2 {
+        .results-title {
+            flex: 1;
+        }
+        
+        .results-title h2 {
             color: #1f2937;
             font-size: 1.8rem;
             margin-bottom: 10px;
+        }
+        
+        .detail-toggle-btn {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+        }
+        
+        .detail-toggle-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
+        }
+        
+        .detail-toggle-btn.hidden {
+            background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%);
+            box-shadow: 0 4px 12px rgba(107, 114, 128, 0.3);
         }
         
         .module-info {
@@ -138,6 +171,18 @@
             border-radius: 8px;
             padding: 15px;
             margin-bottom: 20px;
+            transition: all 0.3s ease;
+            opacity: 1;
+            max-height: 1000px;
+            overflow: visible;
+        }
+        
+        .module-info.hidden {
+            opacity: 0;
+            max-height: 0;
+            padding: 0 15px;
+            margin-bottom: 0;
+            overflow: hidden;
         }
         
         .tree-container {
@@ -352,9 +397,15 @@
         <div class="results-section" id="results">
             <button class="btn back-btn" onclick="resetParser()">返回上传</button>
             <div class="results-header">
-                <h2>解析结果</h2>
-                <div class="module-info" id="module-info"></div>
+                <div class="results-title">
+                    <h2>解析结果</h2>
+                </div>
+                <button class="detail-toggle-btn" id="detail-toggle-btn" onclick="toggleModuleInfo()">
+                    <span id="detail-icon">📊</span>
+                    <span id="detail-text">隐藏详情</span>
+                </button>
             </div>
+            <div class="module-info" id="module-info"></div>
             <div class="tree-container" id="tree-container">
                 <!-- Tree will be rendered here -->
             </div>
@@ -506,6 +557,11 @@
             renderTree(data.tree);
             results.style.display = 'block';
             document.querySelector('.upload-section').style.display = 'none';
+            
+            // 3秒后自动隐藏模块信息，方便查看树形结构
+            setTimeout(() => {
+                hideModuleInfo();
+            }, 3000);
         }
 
         function renderTree(treeData) {
@@ -671,6 +727,45 @@
                     toggle.textContent = '▼';
                 }
             }
+        }
+
+        function toggleModuleInfo() {
+            const moduleInfoDiv = document.getElementById('module-info');
+            const toggleBtn = document.getElementById('detail-toggle-btn');
+            const detailIcon = document.getElementById('detail-icon');
+            const detailText = document.getElementById('detail-text');
+            
+            if (moduleInfoDiv.classList.contains('hidden')) {
+                // 显示详细信息
+                showModuleInfo();
+            } else {
+                // 隐藏详细信息
+                hideModuleInfo();
+            }
+        }
+
+        function showModuleInfo() {
+            const moduleInfoDiv = document.getElementById('module-info');
+            const toggleBtn = document.getElementById('detail-toggle-btn');
+            const detailIcon = document.getElementById('detail-icon');
+            const detailText = document.getElementById('detail-text');
+            
+            moduleInfoDiv.classList.remove('hidden');
+            toggleBtn.classList.remove('hidden');
+            detailIcon.textContent = '📊';
+            detailText.textContent = '隐藏详情';
+        }
+
+        function hideModuleInfo() {
+            const moduleInfoDiv = document.getElementById('module-info');
+            const toggleBtn = document.getElementById('detail-toggle-btn');
+            const detailIcon = document.getElementById('detail-icon');
+            const detailText = document.getElementById('detail-text');
+            
+            moduleInfoDiv.classList.add('hidden');
+            toggleBtn.classList.add('hidden');
+            detailIcon.textContent = '📋';
+            detailText.textContent = '显示详情';
         }
 
         function resetParser() {

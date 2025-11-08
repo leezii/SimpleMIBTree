@@ -329,6 +329,23 @@ def calculate_numeric_oids_cross_files(raw_objects):
 
 def build_hierarchy_cross_files(raw_objects):
     """Build object hierarchy across files"""
+    # Filter out module objects and focus on actual MIB objects
+    mib_objects = [obj for obj in raw_objects if obj['type'] != 'module']
+    
+    # If we have MIB objects that should be in mib-2 hierarchy, use the new structure
+    if mib_objects:
+        # Check if these are standard MIB-II objects by looking for key indicators
+        has_mib2_objects = False
+        for obj in mib_objects:
+            numeric_oid = obj.get('numeric_oid', '')
+            if numeric_oid and numeric_oid.startswith('1.3.6.1.2.1.'):
+                has_mib2_objects = True
+                break
+        
+        if has_mib2_objects:
+            return build_mib2_hierarchy(mib_objects)
+    
+    # Fallback to original logic for non-MIB-II files
     # Create object dictionary with name as key
     obj_dict = {}
     root_objects = []
@@ -363,8 +380,142 @@ def build_hierarchy_cross_files(raw_objects):
     # Step 3: Organize root level objects by module
     return organize_by_modules(root_objects, raw_objects)
 
+def build_mib2_hierarchy(all_objects):
+    """Build correct MIB-2 hierarchy structure"""
+    # Create mib-2 root node
+    mib2_node = {
+        'text': 'mib-2',
+        'type': 'mib2_root',
+        'oid': '1.3.6.1.2.1',
+        'numeric_oid': '1.3.6.1.2.1',
+        'children': []
+    }
+    
+    # Create standard mib-2 sub-nodes
+    standard_nodes = {
+        'interfaces': {
+            'text': 'interfaces',
+            'type': 'group',
+            'oid': '1.3.6.1.2.1.2',
+            'numeric_oid': '1.3.6.1.2.1.2',
+            'children': []
+        },
+        'ip': {
+            'text': 'ip',
+            'type': 'group',
+            'oid': '1.3.6.1.2.1.4',
+            'numeric_oid': '1.3.6.1.2.1.4',
+            'children': []
+        },
+        'icmp': {
+            'text': 'icmp',
+            'type': 'group',
+            'oid': '1.3.6.1.2.1.5',
+            'numeric_oid': '1.3.6.1.2.1.5',
+            'children': []
+        },
+        'tcp': {
+            'text': 'tcp',
+            'type': 'group',
+            'oid': '1.3.6.1.2.1.6',
+            'numeric_oid': '1.3.6.1.2.1.6',
+            'children': []
+        },
+        'udp': {
+            'text': 'udp',
+            'type': 'group',
+            'oid': '1.3.6.1.2.1.7',
+            'numeric_oid': '1.3.6.1.2.1.7',
+            'children': []
+        },
+        'snmp': {
+            'text': 'snmp',
+            'type': 'group',
+            'oid': '1.3.6.1.2.1.11',
+            'numeric_oid': '1.3.6.1.2.1.11',
+            'children': []
+        }
+    }
+    
+    # Add standard nodes to mib-2
+    for node_name, node_obj in standard_nodes.items():
+        mib2_node['children'].append(node_obj)
+    
+    # Categorize objects based on their OID or naming patterns
+    uncategorized_objects = []
+    
+    for obj in all_objects:
+        if obj['type'] == 'module':
+            continue  # Skip module objects for now
+        
+        obj_name = obj['text']
+        numeric_oid = obj.get('numeric_oid', '')
+        
+        # Categorize based on numeric OID
+        categorized = False
+        
+        if numeric_oid and numeric_oid != 'N/A':
+            if numeric_oid.startswith('1.3.6.1.2.1.2'):  # interfaces
+                standard_nodes['interfaces']['children'].append(obj)
+                categorized = True
+            elif numeric_oid.startswith('1.3.6.1.2.1.4'):  # ip
+                standard_nodes['ip']['children'].append(obj)
+                categorized = True
+            elif numeric_oid.startswith('1.3.6.1.2.1.5'):  # icmp
+                standard_nodes['icmp']['children'].append(obj)
+                categorized = True
+            elif numeric_oid.startswith('1.3.6.1.2.1.6'):  # tcp
+                standard_nodes['tcp']['children'].append(obj)
+                categorized = True
+            elif numeric_oid.startswith('1.3.6.1.2.1.7'):  # udp
+                standard_nodes['udp']['children'].append(obj)
+                categorized = True
+            elif numeric_oid.startswith('1.3.6.1.2.1.11'): # snmp
+                standard_nodes['snmp']['children'].append(obj)
+                categorized = True
+        
+        # If not categorized by OID, try naming patterns
+        if not categorized:
+            obj_name_lower = obj_name.lower()
+            if any(keyword in obj_name_lower for keyword in ['if', 'interface']):
+                standard_nodes['interfaces']['children'].append(obj)
+                categorized = True
+            elif any(keyword in obj_name_lower for keyword in ['ip', 'address']):
+                standard_nodes['ip']['children'].append(obj)
+                categorized = True
+            elif 'icmp' in obj_name_lower:
+                standard_nodes['icmp']['children'].append(obj)
+                categorized = True
+            elif 'tcp' in obj_name_lower:
+                standard_nodes['tcp']['children'].append(obj)
+                categorized = True
+            elif 'udp' in obj_name_lower:
+                standard_nodes['udp']['children'].append(obj)
+                categorized = True
+            elif any(keyword in obj_name_lower for keyword in ['snmp', 'trap']):
+                standard_nodes['snmp']['children'].append(obj)
+                categorized = True
+        
+        if not categorized:
+            uncategorized_objects.append(obj)
+    
+    # Add uncategorized objects to mib-2 root
+    for obj in uncategorized_objects:
+        mib2_node['children'].append(obj)
+    
+    # Create the final tree structure
+    root_node = {
+        'text': 'MIB-II Tree',
+        'type': 'root',
+        'oid': '1.3.6.1.2.1',
+        'numeric_oid': '1.3.6.1.2.1',
+        'children': [mib2_node]
+    }
+    
+    return [root_node]
+
 def organize_by_modules(root_objects, all_objects):
-    """Organize objects by module"""
+    """Organize objects by module - fallback method"""
     # Group by module
     modules = {}
     other_objects = []
