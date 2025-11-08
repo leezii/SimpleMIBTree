@@ -916,13 +916,6 @@ def index():
         return jsonify(response)
     return render_template('index.html')
 
-@app.route('/hello', methods=['GET', 'POST'])
-def hello():
-    if request.method == "POST":
-        response = process_form_data(request.form)
-        logger.debug(f"Received POST request with data: {request.form}")
-        return jsonify(response)
-    return render_template('hello.html')
 
 @app.route('/mib-parser')
 def mib_parser():
