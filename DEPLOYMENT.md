@@ -42,15 +42,20 @@ python3 src/app.py
 ```
 flask_web/
 ├── src/                    # 源代码
-│   ├── app.py             # Flask主应用
-│   └── demo.py           # 演示脚本
+│   ├── app.py             # Flask主应用（应用工厂模式）
+│   ├── config.py          # 配置管理
+│   ├── routes.py          # 路由处理（蓝图）
+│   ├── file_handler.py    # 文件处理模块
+│   └── mib_parser.py     # MIB解析核心模块
 ├── tests/                 # 测试代码
 ├── test_data/            # 测试数据
-├── docs/                 # 文档
 ├── examples/             # 示例
 ├── templates/            # HTML模板
+│   └── mib_parser.html   # MIB解析器页面（主页）
 ├── uploads/              # 临时上传目录
 ├── requirements.txt      # Python依赖
+├── README.md             # 项目说明文档
+├── DEPLOYMENT.md         # 部署说明
 └── .gitignore          # Git忽略文件
 ```
 
@@ -122,4 +127,4 @@ A: 检查以下几点：
 如有问题，请查看：
 1. 应用日志输出
 2. 测试用例运行结果
-3. 项目文档：`docs/`目录
+3. 项目文档：`README.md` 和 `DEPLOYMENT.md`

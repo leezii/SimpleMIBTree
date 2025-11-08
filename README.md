@@ -65,7 +65,7 @@ cd src && python app.py
 
 ### 1. 访问MIB解析器
 - 打开浏览器访问 `http://localhost:5000`
-- 点击导航栏中的 "🌳 MIB解析器" 链接
+- 直接显示MIB解析器页面（无需额外导航）
 
 ### 2. 上传MIB文件
 - 点击上传区域选择文件，或直接拖拽文件到上传区域
@@ -127,8 +127,7 @@ flask_web/
 ├── examples/             # 示例
 │   └── browser_test.html # 浏览器测试页面
 ├── templates/            # 模板文件
-│   ├── index.html        # 首页
-│   └── mib_parser.html   # MIB解析器页面
+│   └── mib_parser.html   # MIB解析器页面（主页）
 ├── uploads/              # 上传文件目录
 ├── requirements.txt       # Python依赖包
 ├── README.md             # 项目说明文档

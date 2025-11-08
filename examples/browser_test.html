@@ -102,7 +102,7 @@
 
     <script>
         function openMibParser() {
-            window.open('http://localhost:5000/mib-parser', '_blank');
+            window.open('http://localhost:5000/', '_blank');
         }
         
         function runAPITest() {
@@ -110,7 +110,7 @@
             results.innerHTML = '<div class="status info">正在运行API测试...</div>';
             
             // 模拟API测试
-            fetch('http://localhost:5000/mib-parser')
+            fetch('http://localhost:5000/')
                 .then(response => {
                     if (response.ok) {
                         results.innerHTML = '<div class="status success">✓ MIB解析器页面可访问</div>';
