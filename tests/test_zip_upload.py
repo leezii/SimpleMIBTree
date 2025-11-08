@@ -17,9 +17,9 @@ def test_zip_upload():
     with zipfile.ZipFile(zip_buffer, 'w', zipfile.ZIP_DEFLATED) as zip_file:
         # Add existing MIB files to ZIP
         mib_files = [
-            'sample_mibs/CHILD-MIB.mib',
-            'sample_mibs/RELATED-MIB.mib',
-            'sample_mibs/SAMPLE-MIB.mib'
+            'test_data/sample_mibs/CHILD-MIB.mib',
+            'test_data/sample_mibs/RELATED-MIB.mib',
+            'test_data/sample_mibs/SAMPLE-MIB.mib'
         ]
         
         for mib_file in mib_files:

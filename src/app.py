@@ -25,8 +25,12 @@ STANDARD_OID_MAP = {
     'snmpV2': '1.3.6.1.6'
 }
 
-app = Flask(__name__)
-app.config['UPLOAD_FOLDER'] = 'uploads'
+# Get the parent directory of src (which is the project root)
+import os
+project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+app = Flask(__name__, template_folder=os.path.join(project_root, 'templates'))
+app.config['UPLOAD_FOLDER'] = os.path.join(project_root, 'uploads')
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max file size
 
 # Ensure upload directory exists

@@ -7,7 +7,7 @@ def test_mib_parser():
     url = 'http://localhost:5000/upload-mib'
     
     # 检查示例MIB文件是否存在
-    mib_file_path = 'sample_mibs/SAMPLE-MIB.mib'
+    mib_file_path = 'test_data/sample_mibs/SAMPLE-MIB.mib'
     if not os.path.exists(mib_file_path):
         print(f"错误: 找不到测试文件 {mib_file_path}")
         return
@@ -52,7 +52,7 @@ def test_mib_parser():
                 print(f"错误: {result.get('error', 'Unknown error')}")
                 
         except requests.exceptions.ConnectionError:
-            print("错误: 无法连接到Flask服务器。请确保服务器正在运行 (python app.py)")
+            print("错误: 无法连接到Flask服务器。请确保服务器正在运行 (python src/app.py)")
         except Exception as e:
             print(f"错误: {str(e)}")
 

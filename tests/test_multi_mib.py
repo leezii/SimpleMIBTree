@@ -13,7 +13,7 @@ def test_single_file_upload():
     
     url = 'http://127.0.0.1:5000/upload-mib'
     
-    with open('sample_mibs/SAMPLE-MIB.mib', 'rb') as f:
+    with open('test_data/sample_mibs/SAMPLE-MIB.mib', 'rb') as f:
         files = {'mib_file': f}
         response = requests.post(url, files=files)
     
@@ -35,7 +35,7 @@ def test_multi_file_upload():
     # Add multiple files
     file_names = ['SAMPLE-MIB.mib', 'RELATED-MIB.mib', 'CHILD-MIB.mib']
     for file_name in file_names:
-        file_path = f'sample_mibs/{file_name}'
+        file_path = f'test_data/sample_mibs/{file_name}'
         if os.path.exists(file_path):
             files.append(('mib_files', open(file_path, 'rb')))
     
@@ -92,10 +92,10 @@ if __name__ == '__main__':
     try:
         response = requests.get('http://127.0.0.1:5000/mib-parser')
         if response.status_code != 200:
-            print("❌ Flask application not running, please start it first: python3 app.py")
+            print("❌ Flask application not running, please start it first: python3 src/app.py")
             exit(1)
     except requests.exceptions.ConnectionError:
-        print("❌ Cannot connect to Flask application, please start it first: python3 app.py")
+        print("❌ Cannot connect to Flask application, please start it first: python3 src/app.py")
         exit(1)
     
     # Run tests
