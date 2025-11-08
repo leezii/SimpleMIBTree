@@ -48,9 +48,9 @@
 
 ## 🚀 使用方法
 
-1. 启动应用: `python app.py`
+1. 启动应用: `python3 src/app.py`
 2. 访问: http://localhost:5000/mib-parser
-3. 上传MIB文件（如 sample_mibs/SAMPLE-MIB.mib）
+3. 上传MIB文件（如 test_data/sample_mibs/SAMPLE-MIB.mib）
 4. 点击节点查看层次结构
 5. 展开节点查看详细信息
 
@@ -69,7 +69,7 @@
 
 ## 📊 测试结果
 
-运行 `python test_mib_parser.py` 查看完整的层次结构输出，包括：
+运行 `python3 tests/test_mib_parser.py` 查看完整的层次结构输出，包括：
 - 模块信息
 - 系统信息组
 - 配置表结构

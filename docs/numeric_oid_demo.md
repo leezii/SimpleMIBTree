@@ -84,9 +84,9 @@ def calculate_numeric_oids(raw_objects):
 
 ## 🚀 使用方法
 
-1. **启动应用**: `python app.py`
+1. **启动应用**: `python3 src/app.py`
 2. **访问界面**: http://localhost:5000/mib-parser
-3. **上传MIB**: 使用示例文件 `sample_mibs/SAMPLE-MIB.mib`
+3. **上传MIB**: 使用示例文件 `test_data/sample_mibs/SAMPLE-MIB.mib`
 4. **查看结果**: 
    - 每个节点显示两种OID格式
    - 符号格式：`{ sampleSystemInfo 1 }`
@@ -108,7 +108,7 @@ def calculate_numeric_oids(raw_objects):
 
 ## ✅ 测试验证
 
-运行测试：`python test_mib_parser.py`
+运行测试：`python3 tests/test_mib_parser.py`
 
 期望输出包含：
 - ✅ 所有节点都有正确的数字OID
