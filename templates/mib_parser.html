@@ -196,6 +196,23 @@
             color: #1f2937;
         }
         
+        .tree-filename {
+            font-size: 0.85rem;
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 8px;
+        }
+        
+        .module-filename {
+            background: #fef3c7;
+            color: #92400e;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: normal;
+            margin-left: 8px;
+        }
+        
         .tree-oid {
             font-size: 0.85rem;
             color: #6b7280;
@@ -544,7 +561,23 @@
             // 文本
             const text = document.createElement('span');
             text.className = 'tree-text';
-            text.textContent = node.text;
+            
+            // 特殊处理模块节点，分离模块名和文件名
+            if (node.type === 'module' && node.text.includes(' (')) {
+                const parts = node.text.split(' (');
+                const moduleName = parts[0];
+                const filename = parts[1].replace(')', '');
+                
+                text.textContent = moduleName;
+                
+                // 添加文件名标签
+                const filenameSpan = document.createElement('span');
+                filenameSpan.className = 'module-filename';
+                filenameSpan.textContent = filename;
+                text.appendChild(filenameSpan);
+            } else {
+                text.textContent = node.text;
+            }
             
             // OID
             const oid = document.createElement('span');

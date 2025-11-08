@@ -394,8 +394,65 @@ def organize_by_modules(root_objects, all_objects):
         }
         
         for module_name, module_obj in modules.items():
+            # Try to get source file from any object with this module name
+            source_file = None
+            
+            # First try exact matching
+            for obj in all_objects:
+                if obj.get('source_module') == module_name and obj.get('source_file'):
+                    source_file = obj.get('source_file')
+                    break
+            
+            # If not found, try case-insensitive matching
+            if not source_file:
+                for obj in all_objects:
+                    if obj.get('source_module') and obj.get('source_module').lower() == module_name.lower() and obj.get('source_file'):
+                        source_file = obj.get('source_file')
+                        break
+            
+            # If still not found, try matching with the original module text
+            if not source_file:
+                original_module_text = module_obj['text'].replace('Module: ', '')
+                for obj in all_objects:
+                    if obj.get('source_module') and obj.get('source_module').lower() == original_module_text.lower() and obj.get('source_file'):
+                        source_file = obj.get('source_file')
+                        break
+            
+            # If still not found, try fuzzy matching (remove common prefixes/suffixes)
+            if not source_file:
+                # Try to match by removing common MIB naming patterns
+                module_variants = [
+                    module_name.lower(),
+                    module_name.lower().replace('mib', ''),
+                    module_name.lower().replace('-mib', ''),
+                    module_name.lower().replace('_mib', ''),
+                ]
+                
+                for variant in module_variants:
+                    for obj in all_objects:
+                        if obj.get('source_module') and variant in obj.get('source_module').lower() and obj.get('source_file'):
+                            source_file = obj.get('source_file')
+                            break
+                    if source_file:
+                        break
+            
+            # Last resort: just take the first available source file
+            if not source_file:
+                for obj in all_objects:
+                    if obj.get('source_file'):
+                        source_file = obj.get('source_file')
+                        break
+            
             # Find objects belonging to this module
             module_objects = [obj for obj in root_objects if obj.get('source_module') == module_name]
+            
+            # Add file information to module object
+            if source_file:
+                module_obj['source_file'] = source_file
+                # Update the display text to include filename
+                module_obj['text'] = f"{module_name} ({source_file})"
+            else:
+                module_obj['text'] = f"{module_name}"
             
             # Add these child objects to module object
             for obj in module_objects:
