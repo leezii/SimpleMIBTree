@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>网络工具集</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+            color: white;
+            padding: 40px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 3rem;
+            margin-bottom: 15px;
+            font-weight: 600;
+        }
+        
+        .header p {
+            opacity: 0.9;
+            font-size: 1.2rem;
+            line-height: 1.6;
+        }
+        
+        .tools-section {
+            padding: 60px 40px;
+        }
+        
+        .tools-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 30px;
+            margin-top: 40px;
+        }
+        
+        .tool-card {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            border: 2px solid #e5e7eb;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .tool-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+            transform: scaleX(0);
+            transition: transform 0.3s ease;
+        }
+        
+        .tool-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+            border-color: #4f46e5;
+        }
+        
+        .tool-card:hover::before {
+            transform: scaleX(1);
+        }
+        
+        .tool-icon {
+            font-size: 3rem;
+            margin-bottom: 20px;
+            display: block;
+        }
+        
+        .tool-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 15px;
+        }
+        
+        .tool-description {
+            color: #6b7280;
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+        
+        .tool-features {
+            list-style: none;
+            margin-bottom: 25px;
+        }
+        
+        .tool-features li {
+            padding: 5px 0;
+            color: #4b5563;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+        }
+        
+        .tool-features li::before {
+            content: '✓';
+            color: #10b981;
+            font-weight: bold;
+            margin-right: 10px;
+        }
+        
+        .tool-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+            color: white;
+            text-decoration: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+        
+        .tool-link:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(79, 70, 229, 0.4);
+        }
+        
+        .section-title {
+            text-align: center;
+            font-size: 2rem;
+            color: #1f2937;
+            margin-bottom: 20px;
+            font-weight: 600;
+        }
+        
+        .section-subtitle {
+            text-align: center;
+            color: #6b7280;
+            font-size: 1.1rem;
+            margin-bottom: 40px;
+        }
+        
+        .coming-soon {
+            opacity: 0.7;
+            position: relative;
+        }
+        
+        .coming-soon::after {
+            content: '即将推出';
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: #f59e0b;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+        
+        .footer {
+            background: #f9fafb;
+            padding: 30px;
+            text-align: center;
+            border-top: 1px solid #e5e7eb;
+        }
+        
+        .footer p {
+            color: #6b7280;
+            margin-bottom: 10px;
+        }
+        
+        .footer a {
+            color: #4f46e5;
+            text-decoration: none;
+        }
+        
+        .footer a:hover {
+            text-decoration: underline;
+        }
+        
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .tools-grid {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+            
+            .tools-section {
+                padding: 40px 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🌐 网络工具集</h1>
+            <p>专业的网络管理和开发工具集合，助力网络工程师提升工作效率</p>
+        </div>
+        
+        <div class="tools-section">
+            <h2 class="section-title">可用工具</h2>
+            <p class="section-subtitle">选择您需要的工具开始使用</p>
+            
+            <div class="tools-grid">
+                <!-- MIB解析器 -->
+                <div class="tool-card">
+                    <span class="tool-icon">🌳</span>
+                    <h3 class="tool-title">MIB文件解析器</h3>
+                    <p class="tool-description">
+                        强大的SNMP MIB文件解析工具，支持多种格式，以直观的树形结构展示管理信息库内容。
+                    </p>
+                    <ul class="tool-features">
+                        <li>支持 .mib, .txt, .my 格式文件</li>
+                        <li>批量文件上传和ZIP压缩包支持</li>
+                        <li>交互式树形结构展示</li>
+                        <li>详细的OID和语法信息</li>
+                    </ul>
+                    <a href="/mib-parser" class="tool-link">
+                        <span>开始使用</span>
+                        <span>→</span>
+                    </a>
+                </div>
+                
+                <!-- SNMP OID计算器 -->
+                <div class="tool-card">
+                    <span class="tool-icon">🧮</span>
+                    <h3 class="tool-title">SNMP OID计算器</h3>
+                    <p class="tool-description">
+                        智能生成SNMP命令工具，支持MIB Table和叶子节点查询，自动构建精确的snmpwalk和snmpget命令。
+                    </p>
+                    <ul class="tool-features">
+                        <li>支持snmpwalk和snmpget命令生成</li>
+                        <li>完整的SNMPv1/v2c/v3支持</li>
+                        <li>智能参数配置和验证</li>
+                        <li>一键复制生成的命令</li>
+                    </ul>
+                    <a href="/oid-calculator" class="tool-link">
+                        <span>开始使用</span>
+                        <span>→</span>
+                    </a>
+                </div>
+                
+                <div class="tool-card coming-soon">
+                    <span class="tool-icon">🔍</span>
+                    <h3 class="tool-title">网络扫描器</h3>
+                    <p class="tool-description">
+                        全面的网络扫描和发现工具，帮助您快速了解网络拓扑和设备状态。
+                    </p>
+                    <ul class="tool-features">
+                        <li>IP范围扫描</li>
+                        <li>端口扫描检测</li>
+                        <li>设备类型识别</li>
+                        <li>网络拓扑生成</li>
+                    </ul>
+                    <a href="#" class="tool-link" style="opacity: 0.5; cursor: not-allowed;">
+                        <span>即将推出</span>
+                        <span>🔒</span>
+                    </a>
+                </div>
+                
+                <div class="tool-card coming-soon">
+                    <span class="tool-icon">⚙️</span>
+                    <h3 class="tool-title">配置管理器</h3>
+                    <p class="tool-description">
+                        网络设备配置备份和管理工具，支持多厂商设备和自动化配置部署。
+                    </p>
+                    <ul class="tool-features">
+                        <li>多厂商设备支持</li>
+                        <li>配置自动备份</li>
+                        <li>配置变更对比</li>
+                        <li>批量配置部署</li>
+                    </ul>
+                    <a href="#" class="tool-link" style="opacity: 0.5; cursor: not-allowed;">
+                        <span>即将推出</span>
+                        <span>🔒</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p>© 2024 网络工具集 - 专业的网络管理解决方案</p>
+            <p>
+                <a href="/mib-parser">MIB解析器</a> | 
+                <a href="/oid-calculator">OID计算器</a> | 
+                <span style="color: #9ca3af;">更多工具开发中...</span>
+            </p>
+        </div>
+    </div>
+    
+    <script>
+        // 为即将推出的工具添加点击提示
+        document.querySelectorAll('.coming-soon .tool-link').forEach(link => {
+            link.addEventListener('click', (e) => {
+                e.preventDefault();
+                alert('此工具正在开发中，敬请期待！');
+            });
+        });
+        
+        // 添加页面加载动画
+        document.addEventListener('DOMContentLoaded', () => {
+            const cards = document.querySelectorAll('.tool-card');
+            cards.forEach((card, index) => {
+                card.style.opacity = '0';
+                card.style.transform = 'translateY(20px)';
+                setTimeout(() => {
+                    card.style.transition = 'all 0.5s ease';
+                    card.style.opacity = '1';
+                    card.style.transform = 'translateY(0)';
+                }, index * 100);
+            });
+        });
+    </script>
+</body>
+</html>

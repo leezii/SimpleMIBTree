@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SNMP OID计算器</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+        
+        .header p {
+            opacity: 0.9;
+            font-size: 1.1rem;
+        }
+        
+        .main-content {
+            padding: 40px;
+        }
+        
+        .form-section {
+            background: #f8fafc;
+            border-radius: 12px;
+            padding: 30px;
+            margin-bottom: 30px;
+            border: 1px solid #e2e8f0;
+        }
+        
+        .form-group {
+            margin-bottom: 25px;
+        }
+        
+        .form-group label {
+            display: block;
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 8px;
+            font-size: 1rem;
+        }
+        
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            background: white;
+        }
+        
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #4f46e5;
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+        }
+        
+        .form-group textarea {
+            resize: vertical;
+            min-height: 100px;
+            font-family: 'Courier New', monospace;
+        }
+        
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        
+        .radio-group {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .radio-option {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            padding: 12px 20px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+        
+        .radio-option:hover {
+            border-color: #4f46e5;
+            background: #f8fafc;
+        }
+        
+        .radio-option input[type="radio"] {
+            width: auto;
+            margin: 0;
+        }
+        
+        .radio-option.selected {
+            border-color: #4f46e5;
+            background: #eef2ff;
+        }
+        
+        .btn {
+            background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            margin-right: 10px;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(79, 70, 229, 0.4);
+        }
+        
+        .btn-secondary {
+            background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%);
+        }
+        
+        .btn-secondary:hover {
+            box-shadow: 0 8px 25px rgba(107, 114, 128, 0.4);
+        }
+        
+        .result-section {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            border: 2px solid #e5e7eb;
+            display: none;
+        }
+        
+        .result-section.show {
+            display: block;
+        }
+        
+        .result-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .result-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #1f2937;
+        }
+        
+        .copy-btn {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        .copy-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+        }
+        
+        .command-output {
+            background: #1f2937;
+            color: #f9fafb;
+            padding: 20px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.95rem;
+            line-height: 1.6;
+            overflow-x: auto;
+            position: relative;
+        }
+        
+        .command-output pre {
+            margin: 0;
+            white-space: pre-wrap;
+        }
+        
+        .command-type {
+            display: inline-block;
+            background: #4f46e5;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            margin-bottom: 15px;
+        }
+        
+        .alert {
+            padding: 15px 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+            display: none;
+        }
+        
+        .alert.error {
+            background-color: #fef2f2;
+            border: 1px solid #fecaca;
+            color: #dc2626;
+        }
+        
+        .alert.success {
+            background-color: #f0fdf4;
+            border: 1px solid #bbf7d0;
+            color: #16a34a;
+        }
+        
+        .alert.info {
+            background-color: #eff6ff;
+            border: 1px solid #bfdbfe;
+            color: #1d4ed8;
+        }
+        
+        .help-text {
+            font-size: 0.9rem;
+            color: #6b7280;
+            margin-top: 6px;
+        }
+        
+        .example-section {
+            background: #fef3c7;
+            border: 1px solid #fbbf24;
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+        
+        .example-title {
+            font-weight: 600;
+            color: #92400e;
+            margin-bottom: 10px;
+        }
+        
+        .example-content {
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+            color: #78350f;
+            background: #fffbeb;
+            padding: 10px;
+            border-radius: 4px;
+        }
+        
+        @media (max-width: 768px) {
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+            
+            .radio-group {
+                flex-direction: column;
+            }
+            
+            .main-content {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <div>
+                    <h1>🧮 SNMP OID计算器</h1>
+                    <p>生成精确的SNMP命令，支持MIB Table和叶子节点查询</p>
+                </div>
+                <a href="/" style="background: rgba(255,255,255,0.2); color: white; text-decoration: none; padding: 10px 20px; border-radius: 8px; font-weight: 500; transition: all 0.3s ease; display: flex; align-items: center; gap: 8px;">
+                    <span>←</span>
+                    <span>返回主页</span>
+                </a>
+            </div>
+        </div>
+        
+        <div class="main-content">
+            <div class="form-section">
+                <div class="form-group">
+                    <label>查询类型</label>
+                    <div class="radio-group">
+                        <label class="radio-option selected">
+                            <input type="radio" name="query_type" value="table" checked>
+                            <span>MIB Table (snmpwalk)</span>
+                        </label>
+                        <label class="radio-option">
+                            <input type="radio" name="query_type" value="leaf">
+                            <span>叶子节点 (snmpget)</span>
+                        </label>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="oid">OID或MIB名称</label>
+                    <input type="text" id="oid" placeholder="例如: 1.3.6.1.2.1.2.2 或 ifTable">
+                    <div class="help-text">输入完整的OID数字或MIB名称，支持标准MIB和自定义MIB</div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="target_ip">目标设备IP</label>
+                        <input type="text" id="target_ip" placeholder="例如: 192.168.1.1" value="192.168.1.1">
+                        <div class="help-text">SNMP设备的IP地址</div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="community">Community字符串</label>
+                        <input type="text" id="community" placeholder="例如: public" value="public">
+                        <div class="help-text">SNMP community字符串</div>
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="version">SNMP版本</label>
+                        <select id="version">
+                            <option value="1">SNMPv1</option>
+                            <option value="2c" selected>SNMPv2c</option>
+                            <option value="3">SNMPv3</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="port">SNMP端口</label>
+                        <input type="number" id="port" placeholder="例如: 161" value="161">
+                        <div class="help-text">SNMP服务端口，默认161</div>
+                    </div>
+                </div>
+                
+                <div class="form-group" id="snmpv3_options" style="display: none;">
+                    <label>SNMPv3 认证参数</label>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <input type="text" id="username" placeholder="用户名">
+                        </div>
+                        <div class="form-group">
+                            <select id="auth_protocol">
+                                <option value="">无认证</option>
+                                <option value="MD5">MD5</option>
+                                <option value="SHA">SHA</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <input type="password" id="auth_password" placeholder="认证密码">
+                        </div>
+                        <div class="form-group">
+                            <select id="priv_protocol">
+                                <option value="">无加密</option>
+                                <option value="DES">DES</option>
+                                <option value="AES">AES</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <input type="password" id="priv_password" placeholder="加密密码">
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="additional_options">额外参数</label>
+                    <textarea id="additional_options" placeholder="例如: -r 3 -t 10"></textarea>
+                    <div class="help-text">可选的额外SNMP参数，如重试次数(-r)和超时时间(-t)</div>
+                </div>
+                
+                <div style="display: flex; gap: 10px;">
+                    <button class="btn" onclick="generateCommand()">生成命令</button>
+                    <button class="btn btn-secondary" onclick="clearForm()">清空表单</button>
+                </div>
+            </div>
+            
+            <div class="example-section">
+                <div class="example-title">📝 使用示例</div>
+                <div class="example-content">
+                    <strong>MIB Table示例:</strong><br>
+                    OID: ifTable 或 1.3.6.1.2.1.2.2<br>
+                    生成: snmpwalk -v2c -c public 192.168.1.1 ifTable<br><br>
+                    <strong>叶子节点示例:</strong><br>
+                    OID: sysDescr.0 或 1.3.6.1.2.1.1.1.0<br>
+                    生成: snmpget -v2c -c public 192.168.1.1 sysDescr.0
+                </div>
+            </div>
+            
+            <div class="alert" id="alert"></div>
+            
+            <div class="result-section" id="result">
+                <div class="result-header">
+                    <div>
+                        <span class="command-type" id="command_type">SNMP命令</span>
+                        <h3 class="result-title">生成的命令</h3>
+                    </div>
+                    <button class="copy-btn" onclick="copyCommand()">
+                        <span>📋</span>
+                        <span>复制命令</span>
+                    </button>
+                </div>
+                <div class="command-output">
+                    <pre id="command_output"></pre>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const queryTypeRadios = document.querySelectorAll('input[name="query_type"]');
+        const versionSelect = document.getElementById('version');
+        const snmpv3Options = document.getElementById('snmpv3_options');
+        const resultSection = document.getElementById('result');
+        const alert = document.getElementById('alert');
+        
+        // 监听查询类型变化
+        queryTypeRadios.forEach(radio => {
+            radio.addEventListener('change', (e) => {
+                document.querySelectorAll('.radio-option').forEach(opt => {
+                    opt.classList.remove('selected');
+                });
+                e.target.parentElement.classList.add('selected');
+            });
+        });
+        
+        // 监听SNMP版本变化
+        versionSelect.addEventListener('change', (e) => {
+            if (e.target.value === '3') {
+                snmpv3Options.style.display = 'block';
+            } else {
+                snmpv3Options.style.display = 'none';
+            }
+        });
+        
+        function generateCommand() {
+            const queryType = document.querySelector('input[name="query_type"]:checked').value;
+            const oid = document.getElementById('oid').value.trim();
+            const targetIp = document.getElementById('target_ip').value.trim();
+            const community = document.getElementById('community').value.trim();
+            const version = document.getElementById('version').value;
+            const port = document.getElementById('port').value.trim();
+            const additionalOptions = document.getElementById('additional_options').value.trim();
+            
+            // 验证必填字段
+            if (!oid) {
+                showAlert('请输入OID或MIB名称', 'error');
+                return;
+            }
+            
+            if (!targetIp) {
+                showAlert('请输入目标设备IP', 'error');
+                return;
+            }
+            
+            if (version !== '3' && !community) {
+                showAlert('请输入Community字符串', 'error');
+                return;
+            }
+            
+            if (version === '3') {
+                const username = document.getElementById('username').value.trim();
+                if (!username) {
+                    showAlert('SNMPv3需要用户名', 'error');
+                    return;
+                }
+            }
+            
+            // 构建命令
+            let command = '';
+            
+            if (queryType === 'table') {
+                command = 'snmpwalk';
+            } else {
+                command = 'snmpget';
+            }
+            
+            // 添加版本参数
+            command += ` -v${version}`;
+            
+            // 添加认证参数
+            if (version === '3') {
+                const username = document.getElementById('username').value.trim();
+                const authProtocol = document.getElementById('auth_protocol').value;
+                const authPassword = document.getElementById('auth_password').value.trim();
+                const privProtocol = document.getElementById('priv_protocol').value;
+                const privPassword = document.getElementById('priv_password').value.trim();
+                
+                command += ` -u "${username}"`;
+                
+                if (authProtocol && authPassword) {
+                    command += ` -a ${authProtocol} -A "${authPassword}"`;
+                }
+                
+                if (privProtocol && privPassword) {
+                    command += ` -x ${privProtocol} -X "${privPassword}"`;
+                    command += ` -l authPriv`;
+                } else if (authProtocol && authPassword) {
+                    command += ` -l authNoPriv`;
+                } else {
+                    command += ` -l noAuthNoPriv`;
+                }
+            } else {
+                command += ` -c "${community}"`;
+            }
+            
+            // 添加端口参数
+            if (port && port !== '161') {
+                command += ` -p ${port}`;
+            }
+            
+            // 添加额外参数
+            if (additionalOptions) {
+                command += ` ${additionalOptions}`;
+            }
+            
+            // 添加目标IP和OID
+            command += ` ${targetIp} ${oid}`;
+            
+            // 显示结果
+            document.getElementById('command_type').textContent = queryType === 'table' ? 'SNMPWALK命令' : 'SNMPGET命令';
+            document.getElementById('command_output').textContent = command;
+            resultSection.classList.add('show');
+            
+            showAlert('命令生成成功！', 'success');
+            
+            // 滚动到结果区域
+            resultSection.scrollIntoView({ behavior: 'smooth' });
+        }
+        
+        function copyCommand() {
+            const command = document.getElementById('command_output').textContent;
+            navigator.clipboard.writeText(command).then(() => {
+                showAlert('命令已复制到剪贴板！', 'success');
+            }).catch(() => {
+                // 降级方案
+                const textArea = document.createElement('textarea');
+                textArea.value = command;
+                document.body.appendChild(textArea);
+                textArea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textArea);
+                showAlert('命令已复制到剪贴板！', 'success');
+            });
+        }
+        
+        function clearForm() {
+            document.getElementById('oid').value = '';
+            document.getElementById('target_ip').value = '192.168.1.1';
+            document.getElementById('community').value = 'public';
+            document.getElementById('version').value = '2c';
+            document.getElementById('port').value = '161';
+            document.getElementById('additional_options').value = '';
+            document.getElementById('username').value = '';
+            document.getElementById('auth_protocol').value = '';
+            document.getElementById('auth_password').value = '';
+            document.getElementById('priv_protocol').value = '';
+            document.getElementById('priv_password').value = '';
+            
+            // 重置查询类型
+            document.querySelector('input[name="query_type"][value="table"]').checked = true;
+            document.querySelectorAll('.radio-option').forEach(opt => {
+                opt.classList.remove('selected');
+            });
+            document.querySelector('input[name="query_type"][value="table"]').parentElement.classList.add('selected');
+            
+            // 隐藏SNMPv3选项
+            snmpv3Options.style.display = 'none';
+            
+            // 隐藏结果
+            resultSection.classList.remove('show');
+            
+            hideAlert();
+        }
+        
+        function showAlert(message, type) {
+            alert.textContent = message;
+            alert.className = `alert ${type}`;
+            alert.style.display = 'block';
+            
+            // 3秒后自动隐藏成功和提示消息
+            if (type === 'success' || type === 'info') {
+                setTimeout(() => {
+                    hideAlert();
+                }, 3000);
+            }
+        }
+        
+        function hideAlert() {
+            alert.style.display = 'none';
+        }
+        
+        // 页面加载时的初始化
+        document.addEventListener('DOMContentLoaded', () => {
+            // 添加输入框回车事件
+            document.getElementById('oid').addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    generateCommand();
+                }
+            });
+        });
+    </script>
+</body>
+</html>

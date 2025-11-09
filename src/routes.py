@@ -10,9 +10,19 @@ logger = logging.getLogger(__name__)
 main_bp = Blueprint('main', __name__)
 
 @main_bp.route('/')
+def index():
+    """导航页面（主页）"""
+    return render_template('index.html')
+
+@main_bp.route('/mib-parser')
 def mib_parser_page():
-    """MIB 解析器页面（主页）"""
+    """MIB 解析器页面"""
     return render_template('mib_parser.html')
+
+@main_bp.route('/oid-calculator')
+def oid_calculator_page():
+    """SNMP OID计算器页面"""
+    return render_template('oid_calculator.html')
 
 @main_bp.route('/upload-mib', methods=['POST'])
 def upload_mib():
