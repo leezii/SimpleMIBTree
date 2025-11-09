@@ -205,6 +205,91 @@ flask_web/
 
 欢迎提交问题和拉取请求来改进这个项目。
 
+## 🚀 部署指南
+
+### 快速部署
+
+本项目支持多种生产环境部署方式，详细配置请参考 [DEPLOYMENT.md](DEPLOYMENT.md) 和 [deployment/README.md](deployment/README.md)
+
+#### 1. Docker部署（推荐）
+```bash
+# 克隆项目
+git clone git@github.com:leezii/SimpleMIBTree.git
+cd SimpleMIBTree
+
+# Docker一键部署
+cd deployment/docker
+chmod +x deploy.sh
+./deploy.sh
+```
+
+#### 2. Heroku云部署
+```bash
+# 安装Heroku CLI后
+cd deployment/heroku
+chmod +x deploy.sh
+./deploy.sh
+```
+
+#### 3. Systemd服务部署
+```bash
+# 适用于Linux服务器
+cd deployment/systemd
+chmod +x deploy.sh
+# 修改deploy.sh中的APP_PATH变量
+./deploy.sh
+```
+
+#### 4. 传统Nginx + Gunicorn部署
+```bash
+# 手动配置
+pip install gunicorn
+# 复制配置文件并修改路径
+sudo cp deployment/nginx/flask-web /etc/nginx/sites-available/
+sudo cp deployment/systemd/flask-web.service /etc/systemd/system/
+sudo cp deployment/systemd/gunicorn.conf.py /path/to/app/
+# 启动服务
+sudo systemctl start flask-web
+sudo systemctl restart nginx
+```
+
+### 部署配置文件
+
+所有部署配置文件已按类型归档到 `deployment/` 目录：
+
+```
+deployment/
+├── docker/          # Docker容器化部署
+│   ├── Dockerfile
+│   ├── docker-compose.yml
+│   └── deploy.sh
+├── nginx/           # Nginx反向代理配置
+│   └── flask-web
+├── heroku/          # Heroku云平台部署
+│   ├── Procfile
+│   └── deploy.sh
+├── systemd/         # Systemd服务部署
+│   ├── flask-web.service
+│   ├── gunicorn.conf.py
+│   └── deploy.sh
+└── README.md        # 部署详细说明
+```
+
+### 生产环境访问
+
+部署完成后，应用将通过以下方式访问：
+- **Docker**: http://localhost (端口80)
+- **Heroku**: https://your-app-name.herokuapp.com
+- **Systemd**: http://your-domain.com
+- **Nginx**: http://your-domain.com
+
+### 环境要求
+
+- **Python**: 3.8+
+- **内存**: 最低512MB
+- **存储**: 最低1GB
+- **系统**: Linux/Ubuntu/CentOS (推荐)
+
 ## 许可证
 
 MIT License
