@@ -1,0 +1,15 @@
+[Unit]
+Description=Flask Web Application
+After=network.target
+
+[Service]
+User=www-data
+Group=www-data
+WorkingDirectory=/path/to/SimpleMIBTree
+Environment="PATH=/path/to/SimpleMIBTree/venv/bin"
+ExecStart=/path/to/SimpleMIBTree/venv/bin/gunicorn -c gunicorn.conf.py src.app:app
+ExecReload=/bin/kill -s HUP $MAINPID
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
