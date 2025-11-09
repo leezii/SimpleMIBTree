@@ -520,6 +520,19 @@
             alert.textContent = message;
             alert.className = `alert ${type}`;
             alert.style.display = 'block';
+            alert.style.visibility = 'visible';
+            alert.style.opacity = '1';
+            alert.style.height = 'auto';
+            alert.style.padding = '15px 20px';
+            alert.style.margin = '20px 0';
+            alert.style.overflow = 'visible';
+            
+            // 3秒后自动隐藏成功消息
+            if (type === 'success') {
+                setTimeout(() => {
+                    hideAlert();
+                }, 3000);
+            }
         }
 
         function hideAlert() {
@@ -561,6 +574,9 @@
             }
             
             moduleInfo.innerHTML = moduleInfoHtml;
+            
+            // 重置模块信息显示状态
+            showModuleInfo();
             
             renderTree(data.tree);
             results.style.display = 'block';
