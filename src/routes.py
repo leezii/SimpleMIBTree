@@ -21,7 +21,7 @@ def mib_parser_page():
 
 @main_bp.route('/oid-calculator')
 def oid_calculator_page():
-    """SNMP OID计算器页面"""
+    """SNMP命令生成器页面"""
     return render_template('oid_calculator.html')
 
 @main_bp.route('/upload-mib', methods=['POST'])

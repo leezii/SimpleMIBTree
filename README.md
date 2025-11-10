@@ -24,7 +24,7 @@
 - 🎨 现代化的Web界面
 - 📱 响应式设计
 
-### 🧮 SNMP OID计算器
+### 🧮 SNMP命令生成器
 - 🎯 支持MIB Table (snmpwalk) 和叶子节点 (snmpget) 查询
 - 🔐 完整的SNMPv1/v2c/v3支持
 - ⚙️ 智能参数配置和验证
@@ -97,8 +97,8 @@ cd src && python app.py
 - 支持的文件格式：`.mib`, `.txt`, `.my`
 - 文件上传后将自动开始解析
 
-### 3. 使用SNMP OID计算器
-- 在导航页面点击"SNMP OID计算器"
+### 3. 使用SNMP命令生成器
+- 在导航页面点击"SNMP命令生成器"
 - 选择查询类型（MIB Table或叶子节点）
 - 输入OID或MIB名称
 - 配置SNMP参数（版本、community等）
@@ -161,7 +161,7 @@ flask_web/
 ├── templates/            # 模板文件
 │   ├── index.html        # 网络工具集导航页面（主页）
 │   ├── mib_parser.html   # MIB解析器页面
-│   └── oid_calculator.html # SNMP OID计算器页面
+│   └── oid_calculator.html # SNMP命令生成器页面
 ├── uploads/              # 上传文件目录
 ├── requirements.txt       # Python依赖包
 ├── README.md             # 项目说明文档
