@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="{{ lang }}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>网络工具集</title>
+    <title>{{ get_translation('网络工具集') }}</title>
     <style>
         * {
             margin: 0;
@@ -220,8 +220,15 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1>🌐 网络工具集</h1>
-            <p>专业的网络管理和开发工具集合，助力网络工程师提升工作效率</p>
+            <!-- 语言切换按钮 -->
+            <div style="position: absolute; top: 20px; right: 20px;">
+                <a href="{{ url_for('main.set_language', lang='zh') }}" 
+                   style="color: white; margin-right: 15px; text-decoration: none; font-weight: 500;">中文</a>
+                <a href="{{ url_for('main.set_language', lang='en') }}" 
+                   style="color: white; text-decoration: none; font-weight: 500;">English</a>
+            </div>
+            <h1>🌐 {{ get_translation('网络工具集') }}</h1>
+            <p>{{ get_translation('专业的网络管理和开发工具集合') }}</p>
         </div>
         
         <div class="tools-section">

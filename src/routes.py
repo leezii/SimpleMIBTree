@@ -1,8 +1,9 @@
 """路由模块"""
 import logging
-from flask import Blueprint, render_template, request, jsonify
+from flask import Blueprint, render_template, request, jsonify, session, redirect, url_for
 from file_handler import validate_and_process_files, save_uploaded_file, cleanup_file
 from mib_parser import mib_parser
+from i18n_helper import get_translation
 
 logger = logging.getLogger(__name__)
 
@@ -12,7 +13,8 @@ main_bp = Blueprint('main', __name__)
 @main_bp.route('/')
 def index():
     """导航页面（主页）"""
-    return render_template('index.html')
+    lang = session.get('language', request.args.get('lang', 'zh'))
+    return render_template('index.html', lang=lang, get_translation=lambda text: get_translation(text, lang))
 
 @main_bp.route('/mib-parser')
 def mib_parser_page():
@@ -28,6 +30,15 @@ def oid_calculator_page():
 def mib_oid_generator_page():
     """MIB表OID生成器页面"""
     return render_template('mib_oid_generator.html')
+
+@main_bp.route('/set-language')
+def set_language():
+    """设置语言偏好"""
+    lang = request.args.get('lang')
+    if lang in ['zh', 'en']:
+        session['language'] = lang
+    # 重定向到之前的页面或首页
+    return redirect(request.referrer or url_for('main.index'))
 
 @main_bp.route('/upload-mib', methods=['POST'])
 def upload_mib():
