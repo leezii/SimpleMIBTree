@@ -32,6 +32,16 @@
 - 🎨 直观的用户界面
 - 📝 详细的使用示例和帮助文本
 
+### 🔢 MIB OID生成器
+- 🎯 智能OID路径计算和生成
+- 🌳 支持从MIB文件自动提取OID结构
+- 📊 实时显示完整的数字OID路径
+- 🔍 支持OID格式验证和纠错
+- 📋 一键复制生成的OID
+- 🎨 现代化的用户界面设计
+- 📱 完全响应式布局
+- ✨ 支持批量OID生成和导出
+
 ### 🏠 统一导航界面
 - 🎨 现代化的工具集展示页面
 - 🔄 流畅的页面导航体验
@@ -104,7 +114,14 @@ cd src && python app.py
 - 配置SNMP参数（版本、community等）
 - 点击"生成命令"获取可执行的SNMP命令
 
-### 4. 查看MIB解析结果
+### 4. 使用MIB OID生成器
+- 在导航页面点击"MIB OID生成器"
+- 上传MIB文件或输入OID路径
+- 系统将自动解析并生成完整的数字OID
+- 支持批量生成和格式验证
+- 可一键复制生成的OID结果
+
+### 5. 查看MIB解析结果
 - 解析完成后将显示**层次化的**树形结构
 - **点击任意节点**可展开/折叠子项（不仅仅是箭头）
 - 每个节点显示名称、类型、OID和详细信息
@@ -161,7 +178,8 @@ flask_web/
 ├── templates/            # 模板文件
 │   ├── index.html        # 网络工具集导航页面（主页）
 │   ├── mib_parser.html   # MIB解析器页面
-│   └── oid_calculator.html # SNMP命令生成器页面
+│   ├── oid_calculator.html # SNMP命令生成器页面
+│   └── mib_oid_generator.html # MIB OID生成器页面
 ├── uploads/              # 上传文件目录
 ├── requirements.txt       # Python依赖包
 ├── README.md             # 项目说明文档
