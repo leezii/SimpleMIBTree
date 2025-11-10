@@ -1,0 +1,835 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MIB表OID生成器</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+        
+        .header p {
+            opacity: 0.9;
+            font-size: 1.1rem;
+        }
+        
+        .main-content {
+            padding: 40px;
+        }
+        
+        .workflow-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+        
+        .input-section, .output-section {
+            background: #f8fafc;
+            border-radius: 12px;
+            padding: 30px;
+            border: 1px solid #e2e8f0;
+        }
+        
+        .section-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 8px;
+            font-size: 1rem;
+        }
+        
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            background: white;
+        }
+        
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #4f46e5;
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+        }
+        
+        .form-group textarea {
+            resize: vertical;
+            min-height: 120px;
+            font-family: 'Courier New', monospace;
+        }
+        
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+        
+        .btn {
+            background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            margin-right: 10px;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(79, 70, 229, 0.4);
+        }
+        
+        .btn-secondary {
+            background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%);
+        }
+        
+        .btn-success {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        }
+        
+        .result-area {
+            background: #1f2937;
+            color: #f9fafb;
+            padding: 20px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.95rem;
+            line-height: 1.6;
+            min-height: 200px;
+            max-height: 400px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+        }
+        
+        .alert {
+            padding: 15px 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+            display: none;
+        }
+        
+        .alert.error {
+            background-color: #fef2f2;
+            border: 1px solid #fecaca;
+            color: #dc2626;
+        }
+        
+        .alert.success {
+            background-color: #f0fdf4;
+            border: 1px solid #bbf7d0;
+            color: #16a34a;
+        }
+        
+        .alert.info {
+            background-color: #eff6ff;
+            border: 1px solid #bfdbfe;
+            color: #1d4ed8;
+        }
+        
+        .help-text {
+            font-size: 0.9rem;
+            color: #6b7280;
+            margin-top: 6px;
+        }
+        
+        .template-section {
+            background: #fef3c7;
+            border: 1px solid #fbbf24;
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+        
+        .template-title {
+            font-weight: 600;
+            color: #92400e;
+            margin-bottom: 10px;
+        }
+        
+        .template-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+        
+        .template-card {
+            background: #fffbeb;
+            border: 1px solid #fcd34d;
+            border-radius: 6px;
+            padding: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .template-card:hover {
+            background: #fef3c7;
+            border-color: #f59e0b;
+        }
+        
+        .template-name {
+            font-weight: 600;
+            color: #78350f;
+            margin-bottom: 5px;
+        }
+        
+        .template-desc {
+            font-size: 0.85rem;
+            color: #92400e;
+        }
+        
+        .oid-result {
+            background: white;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 10px;
+            transition: all 0.3s ease;
+        }
+        
+        .oid-result:hover {
+            border-color: #4f46e5;
+            box-shadow: 0 4px 12px rgba(79, 70, 229, 0.1);
+        }
+        
+        .oid-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        
+        .oid-name {
+            font-weight: 600;
+            color: #1f2937;
+        }
+        
+        .oid-value {
+            font-family: 'Courier New', monospace;
+            background: #f3f4f6;
+            padding: 8px 12px;
+            border-radius: 4px;
+            color: #1f2937;
+            font-size: 0.9rem;
+        }
+        
+        .copy-btn {
+            background: #10b981;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            transition: all 0.3s ease;
+        }
+        
+        .copy-btn:hover {
+            background: #059669;
+        }
+        
+        .advanced-options {
+            background: #f1f5f9;
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+        
+        .advanced-title {
+            font-weight: 600;
+            color: #475569;
+            margin-bottom: 15px;
+        }
+        
+        @media (max-width: 768px) {
+            .workflow-section {
+                grid-template-columns: 1fr;
+            }
+            
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+            
+            .main-content {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <div>
+                    <h1>🎯 MIB表OID生成器</h1>
+                    <p>针对特殊MIB表，根据用户选项智能生成对应的OID</p>
+                </div>
+                <a href="/" style="background: rgba(255,255,255,0.2); color: white; text-decoration: none; padding: 10px 20px; border-radius: 8px; font-weight: 500; transition: all 0.3s ease; display: flex; align-items: center; gap: 8px;">
+                    <span>←</span>
+                    <span>返回主页</span>
+                </a>
+            </div>
+        </div>
+        
+        <div class="main-content">
+            <div class="workflow-section">
+                <!-- 输入区域 -->
+                <div class="input-section">
+                    <h2 class="section-title">
+                        <span>📝</span>
+                        <span>配置选项</span>
+                    </h2>
+                    
+                    <div class="form-group">
+                        <label for="table_type">MIB表类型</label>
+                        <select id="table_type" onchange="updateTableOptions()">
+                            <option value="">请选择表类型</option>
+                            <option value="interface">接口表 (ifTable/ifXTable)</option>
+                            <option value="ip">IP地址表 (ipAddrTable)</option>
+                            <option value="route">路由表 (ipRouteTable)</option>
+                            <option value="tcp">TCP连接表 (tcpConnTable)</option>
+                            <option value="udp">UDP监听表 (udpTable)</option>
+                            <option value="custom">自定义表</option>
+                        </select>
+                        <div class="help-text">选择要生成OID的MIB表类型</div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="base_oid">基础OID</label>
+                        <input type="text" id="base_oid" placeholder="例如: 1.3.6.1.2.1.2.2">
+                        <div class="help-text">表的基础OID，选择表类型后自动填充</div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="index_values">索引值</label>
+                        <textarea id="index_values" placeholder="输入索引值，每行一个&#10;例如:&#10;1&#10;2&#10;10&#10;或者:&#10;192.168.1.1&#10;10.0.0.1"></textarea>
+                        <div class="help-text">输入表的索引值，支持数字和IP地址格式</div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="column_select">选择列</label>
+                        <select id="column_select" multiple style="height: 120px;">
+                            <option value="all">所有列</option>
+                        </select>
+                        <div class="help-text">选择要生成OID的列，按住Ctrl多选</div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="output_format">输出格式</label>
+                            <select id="output_format">
+                                <option value="oid">纯OID</option>
+                                <option value="snmpget">snmpget命令</option>
+                                <option value="snmpwalk">snmpwalk命令</option>
+                                <option value="table">表格格式</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="target_ip">目标IP (可选)</label>
+                            <input type="text" id="target_ip" placeholder="192.168.1.1">
+                            <div class="help-text">生成命令时需要</div>
+                        </div>
+                    </div>
+                    
+                    <div style="display: flex; gap: 10px;">
+                        <button class="btn" onclick="generateOIDs()">生成OID</button>
+                        <button class="btn btn-secondary" onclick="clearForm()">清空</button>
+                        <button class="btn btn-success" onclick="exportResults()">导出结果</button>
+                    </div>
+                </div>
+                
+                <!-- 输出区域 -->
+                <div class="output-section">
+                    <h2 class="section-title">
+                        <span>📋</span>
+                        <span>生成结果</span>
+                    </h2>
+                    
+                    <div id="results_container">
+                        <div class="result-area" id="results">
+                            生成的OID将在这里显示...
+                        </div>
+                    </div>
+                    
+                    <div style="margin-top: 15px; display: flex; gap: 10px;">
+                        <button class="copy-btn" onclick="copyAllResults()">复制全部</button>
+                        <button class="copy-btn" onclick="clearResults()">清空结果</button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 模板区域 -->
+            <div class="template-section">
+                <div class="template-title">🎯 快速模板</div>
+                <div class="help-text">点击模板快速填充常用配置</div>
+                
+                <div class="template-grid">
+                    <div class="template-card" onclick="loadTemplate('interface_basic')">
+                        <div class="template-name">基础接口信息</div>
+                        <div class="template-desc">获取所有接口的基本信息</div>
+                    </div>
+                    
+                    <div class="template-card" onclick="loadTemplate('interface_status')">
+                        <div class="template-name">接口状态监控</div>
+                        <div class="template-desc">监控接口运行状态和流量</div>
+                    </div>
+                    
+                    <div class="template-card" onclick="loadTemplate('ip_addresses')">
+                        <div class="template-name">IP地址信息</div>
+                        <div class="template-desc">获取设备所有IP地址</div>
+                    </div>
+                    
+                    <div class="template-card" onclick="loadTemplate('routing_table')">
+                        <div class="template-name">路由表查询</div>
+                        <div class="template-desc">获取设备路由表信息</div>
+                    </div>
+                    
+                    <div class="template-card" onclick="loadTemplate('tcp_connections')">
+                        <div class="template-name">TCP连接监控</div>
+                        <div class="template-desc">监控当前TCP连接状态</div>
+                    </div>
+                    
+                    <div class="template-card" onclick="loadTemplate('system_info')">
+                        <div class="template-name">系统信息</div>
+                        <div class="template-desc">获取设备系统基本信息</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 高级选项 -->
+            <div class="advanced-options">
+                <div class="advanced-title">⚙️ 高级选项</div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="community">Community字符串</label>
+                        <input type="text" id="community" value="public">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="snmp_version">SNMP版本</label>
+                        <select id="snmp_version">
+                            <option value="1">SNMPv1</option>
+                            <option value="2c" selected>SNMPv2c</option>
+                            <option value="3">SNMPv3</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="custom_columns">自定义列名</label>
+                    <input type="text" id="custom_columns" placeholder="例如: ifDescr, ifOperStatus, ifInOctets">
+                    <div class="help-text">用逗号分隔多个列名，用于自定义表类型</div>
+                </div>
+            </div>
+            
+            <div class="alert" id="alert"></div>
+        </div>
+    </div>
+
+    <script>
+        // 表类型配置
+        const tableConfigs = {
+            interface: {
+                baseOid: '1.3.6.1.2.1.2.2',
+                columns: ['ifIndex', 'ifDescr', 'ifType', 'ifMtu', 'ifSpeed', 'ifPhysAddress', 'ifAdminStatus', 'ifOperStatus', 'ifInOctets', 'ifOutOctets']
+            },
+            ip: {
+                baseOid: '1.3.6.1.2.1.4.20',
+                columns: ['ipAdEntAddr', 'ipAdEntIfIndex', 'ipAdEntNetMask', 'ipAdEntBcastAddr', 'ipAdEntReasmMaxSize']
+            },
+            route: {
+                baseOid: '1.3.6.1.2.1.4.21',
+                columns: ['ipRouteDest', 'ipRouteIfIndex', 'ipRouteMetric1', 'ipRouteNextHop', 'ipRouteType', 'ipRouteProto']
+            },
+            tcp: {
+                baseOid: '1.3.6.1.2.1.6.13',
+                columns: ['tcpConnState', 'tcpConnLocalAddress', 'tcpConnLocalPort', 'tcpConnRemAddress', 'tcpConnRemPort']
+            },
+            udp: {
+                baseOid: '1.3.6.1.2.1.7.5',
+                columns: ['udpLocalAddress', 'udpLocalPort']
+            }
+        };
+        
+        // 模板配置
+        const templates = {
+            interface_basic: {
+                table_type: 'interface',
+                index_values: '1\n2\n3\n4\n5',
+                columns: ['ifDescr', 'ifType', 'ifAdminStatus', 'ifOperStatus'],
+                output_format: 'snmpget'
+            },
+            interface_status: {
+                table_type: 'interface',
+                index_values: '1\n2\n3\n4\n5',
+                columns: ['ifDescr', 'ifOperStatus', 'ifInOctets', 'ifOutOctets'],
+                output_format: 'snmpget'
+            },
+            ip_addresses: {
+                table_type: 'ip',
+                index_values: '192.168.1.1\n10.0.0.1\n172.16.1.1',
+                columns: ['ipAdEntAddr', 'ipAdEntIfIndex', 'ipAdEntNetMask'],
+                output_format: 'snmpget'
+            },
+            routing_table: {
+                table_type: 'route',
+                index_values: '0.0.0.0\n192.168.1.0\n10.0.0.0',
+                columns: ['ipRouteDest', 'ipRouteIfIndex', 'ipRouteNextHop', 'ipRouteType'],
+                output_format: 'snmpget'
+            },
+            tcp_connections: {
+                table_type: 'tcp',
+                index_values: '192.168.1.1.80.10.0.0.1.12345\n192.168.1.1.22.10.0.0.2.54321',
+                columns: ['tcpConnState', 'tcpConnLocalAddress', 'tcpConnLocalPort'],
+                output_format: 'snmpget'
+            },
+            system_info: {
+                table_type: 'custom',
+                base_oid: '1.3.6.1.2.1.1',
+                index_values: '0',
+                columns: ['sysDescr', 'sysObjectID', 'sysUpTime', 'sysContact', 'sysName', 'sysLocation'],
+                output_format: 'snmpget'
+            }
+        };
+        
+        // 更新表选项
+        function updateTableOptions() {
+            const tableType = document.getElementById('table_type').value;
+            const columnSelect = document.getElementById('column_select');
+            const baseOidInput = document.getElementById('base_oid');
+            
+            // 清空现有选项
+            columnSelect.innerHTML = '<option value="all">所有列</option>';
+            
+            if (tableType && tableConfigs[tableType]) {
+                const config = tableConfigs[tableType];
+                
+                // 填充基础OID
+                baseOidInput.value = config.baseOid;
+                
+                // 添加列选项
+                config.columns.forEach(column => {
+                    const option = document.createElement('option');
+                    option.value = column;
+                    option.textContent = column;
+                    columnSelect.appendChild(option);
+                });
+            } else if (tableType === 'custom') {
+                baseOidInput.value = '';
+                baseOidInput.placeholder = '输入自定义表的基础OID';
+                
+                // 从自定义列名输入框获取列
+                const customColumns = document.getElementById('custom_columns').value;
+                if (customColumns) {
+                    const columns = customColumns.split(',').map(col => col.trim());
+                    columns.forEach(column => {
+                        if (column) {
+                            const option = document.createElement('option');
+                            option.value = column;
+                            option.textContent = column;
+                            columnSelect.appendChild(option);
+                        }
+                    });
+                }
+            }
+        }
+        
+        // 加载模板
+        function loadTemplate(templateName) {
+            const template = templates[templateName];
+            if (!template) return;
+            
+            document.getElementById('table_type').value = template.table_type;
+            updateTableOptions();
+            
+            if (template.index_values) {
+                document.getElementById('index_values').value = template.index_values;
+            }
+            
+            if (template.columns) {
+                const columnSelect = document.getElementById('column_select');
+                Array.from(columnSelect.options).forEach(option => {
+                    option.selected = template.columns.includes(option.value);
+                });
+            }
+            
+            if (template.output_format) {
+                document.getElementById('output_format').value = template.output_format;
+            }
+            
+            showAlert(`已加载模板: ${templateName}`, 'success');
+        }
+        
+        // 生成OID
+        function generateOIDs() {
+            const tableType = document.getElementById('table_type').value;
+            const baseOid = document.getElementById('base_oid').value.trim();
+            const indexValues = document.getElementById('index_values').value.trim();
+            const outputFormat = document.getElementById('output_format').value;
+            const targetIp = document.getElementById('target_ip').value.trim();
+            const community = document.getElementById('community').value.trim();
+            const snmpVersion = document.getElementById('snmp_version').value;
+            
+            // 验证输入
+            if (!baseOid) {
+                showAlert('请输入基础OID', 'error');
+                return;
+            }
+            
+            if (!indexValues) {
+                showAlert('请输入索引值', 'error');
+                return;
+            }
+            
+            // 获取选中的列
+            const columnSelect = document.getElementById('column_select');
+            const selectedColumns = Array.from(columnSelect.selectedOptions)
+                .map(option => option.value)
+                .filter(value => value !== 'all');
+            
+            if (selectedColumns.length === 0) {
+                showAlert('请至少选择一列', 'error');
+                return;
+            }
+            
+            // 解析索引值
+            const indices = indexValues.split('\n').map(index => index.trim()).filter(index => index);
+            
+            // 生成OID
+            const results = [];
+            
+            indices.forEach(index => {
+                selectedColumns.forEach(column => {
+                    let oid = '';
+                    let displayText = '';
+                    
+                    if (tableType === 'custom') {
+                        // 自定义表：直接拼接基础OID + 列名 + 索引
+                        oid = `${baseOid}.${column}.${index}`;
+                        displayText = `${column}[${index}]`;
+                    } else {
+                        // 标准表：基础OID + 列索引 + 索引
+                        const columnIndex = getColumnIndex(tableType, column);
+                        const processedIndex = processIndex(index, tableType);
+                        oid = `${baseOid}.${columnIndex}.${processedIndex}`;
+                        displayText = `${column}[${index}]`;
+                    }
+                    
+                    let result = '';
+                    
+                    switch (outputFormat) {
+                        case 'oid':
+                            result = oid;
+                            break;
+                        case 'snmpget':
+                            result = generateSnmpGetCommand(oid, targetIp, community, snmpVersion);
+                            break;
+                        case 'snmpwalk':
+                            result = generateSnmpWalkCommand(baseOid, targetIp, community, snmpVersion);
+                            break;
+                        case 'table':
+                            result = `${displayText}\t${oid}`;
+                            break;
+                    }
+                    
+                    results.push(result);
+                });
+            });
+            
+            // 显示结果
+            displayResults(results);
+            showAlert(`成功生成 ${results.length} 个OID`, 'success');
+        }
+        
+        // 获取列索引
+        function getColumnIndex(tableType, columnName) {
+            const config = tableConfigs[tableType];
+            if (!config) return '1';
+            
+            const index = config.columns.indexOf(columnName);
+            return index >= 0 ? (index + 1).toString() : '1';
+        }
+        
+        // 处理索引值
+        function processIndex(index, tableType) {
+            if (tableType === 'ip' || tableType === 'tcp') {
+                // IP地址格式：转换为数字格式
+                if (index.includes('.')) {
+                    return index.split('.').join('.');
+                }
+            }
+            return index;
+        }
+        
+        // 生成snmpget命令
+        function generateSnmpGetCommand(oid, targetIp, community, version) {
+            let command = `snmpget -v${version}`;
+            
+            if (version !== '3') {
+                command += ` -c ${community}`;
+            }
+            
+            if (targetIp) {
+                command += ` ${targetIp}`;
+            }
+            
+            command += ` ${oid}`;
+            return command;
+        }
+        
+        // 生成snmpwalk命令
+        function generateSnmpWalkCommand(baseOid, targetIp, community, version) {
+            let command = `snmpwalk -v${version}`;
+            
+            if (version !== '3') {
+                command += ` -c ${community}`;
+            }
+            
+            if (targetIp) {
+                command += ` ${targetIp}`;
+            }
+            
+            command += ` ${baseOid}`;
+            return command;
+        }
+        
+        // 显示结果
+        function displayResults(results) {
+            const resultsDiv = document.getElementById('results');
+            if (document.getElementById('output_format').value === 'table') {
+                resultsDiv.textContent = '列名\tOID\n' + results.join('\n');
+            } else {
+                resultsDiv.textContent = results.join('\n');
+            }
+        }
+        
+        // 复制所有结果
+        function copyAllResults() {
+            const results = document.getElementById('results').textContent;
+            navigator.clipboard.writeText(results).then(() => {
+                showAlert('结果已复制到剪贴板', 'success');
+            }).catch(() => {
+                showAlert('复制失败，请手动复制', 'error');
+            });
+        }
+        
+        // 清空表单
+        function clearForm() {
+            document.getElementById('table_type').value = '';
+            document.getElementById('base_oid').value = '';
+            document.getElementById('index_values').value = '';
+            document.getElementById('column_select').innerHTML = '<option value="all">所有列</option>';
+            document.getElementById('output_format').value = 'oid';
+            document.getElementById('target_ip').value = '';
+            document.getElementById('results').textContent = '生成的OID将在这里显示...';
+        }
+        
+        // 清空结果
+        function clearResults() {
+            document.getElementById('results').textContent = '生成的OID将在这里显示...';
+        }
+        
+        // 导出结果
+        function exportResults() {
+            const results = document.getElementById('results').textContent;
+            if (!results || results === '生成的OID将在这里显示...') {
+                showAlert('没有可导出的结果', 'error');
+                return;
+            }
+            
+            const blob = new Blob([results], { type: 'text/plain' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'oid_results.txt';
+            a.click();
+            window.URL.revokeObjectURL(url);
+            
+            showAlert('结果已导出', 'success');
+        }
+        
+        // 显示提示
+        function showAlert(message, type) {
+            const alert = document.getElementById('alert');
+            alert.textContent = message;
+            alert.className = `alert ${type}`;
+            alert.style.display = 'block';
+            
+            if (type === 'success') {
+                setTimeout(() => {
+                    alert.style.display = 'none';
+                }, 3000);
+            }
+        }
+        
+        // 页面加载时初始化
+        document.addEventListener('DOMContentLoaded', () => {
+            // 添加回车键支持
+            document.getElementById('index_values').addEventListener('keydown', (e) => {
+                if (e.ctrlKey && e.key === 'Enter') {
+                    generateOIDs();
+                }
+            });
+        });
+    </script>
+</body>
+</html>

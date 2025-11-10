@@ -24,6 +24,11 @@ def oid_calculator_page():
     """SNMP命令生成器页面"""
     return render_template('oid_calculator.html')
 
+@main_bp.route('/mib-oid-generator')
+def mib_oid_generator_page():
+    """MIB表OID生成器页面"""
+    return render_template('mib_oid_generator.html')
+
 @main_bp.route('/upload-mib', methods=['POST'])
 def upload_mib():
     """处理 MIB 文件上传和解析"""
