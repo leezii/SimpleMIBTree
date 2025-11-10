@@ -168,7 +168,7 @@
         }
         
         .coming-soon::after {
-            content: '即将推出';
+            content: '{{ get_translation("即将推出") }}';
             position: absolute;
             top: 20px;
             right: 20px;
@@ -232,25 +232,25 @@
         </div>
         
         <div class="tools-section">
-            <h2 class="section-title">可用工具</h2>
-            <p class="section-subtitle">选择您需要的工具开始使用</p>
+            <h2 class="section-title">{{ get_translation('可用工具') }}</h2>
+            <p class="section-subtitle">{{ get_translation('选择您需要的工具开始使用') }}</p>
             
             <div class="tools-grid">
                 <!-- MIB解析器 -->
                 <div class="tool-card">
                     <span class="tool-icon">🌳</span>
-                    <h3 class="tool-title">MIB文件解析器</h3>
+                    <h3 class="tool-title">{{ get_translation('MIB文件解析器') }}</h3>
                     <p class="tool-description">
-                        强大的SNMP MIB文件解析工具，支持多种格式，以直观的树形结构展示管理信息库内容。
+                        {{ get_translation('解析和展示MIB文件结构，支持树形显示和OID计算') }}
                     </p>
                     <ul class="tool-features">
-                        <li>支持 .mib, .txt, .my 格式文件</li>
+                        <li>{{ get_translation('支持的格式：.mib, .txt, .my') }}</li>
                         <li>批量文件上传和ZIP压缩包支持</li>
                         <li>交互式树形结构展示</li>
                         <li>详细的OID和语法信息</li>
                     </ul>
                     <a href="/mib-parser" class="tool-link">
-                        <span>开始使用</span>
+                        <span>{{ get_translation('开始使用') }}</span>
                         <span>→</span>
                     </a>
                 </div>
@@ -258,9 +258,9 @@
                 <!-- SNMP OID计算器 -->
                 <div class="tool-card">
                     <span class="tool-icon">🧮</span>
-                    <h3 class="tool-title">SNMP命令生成器</h3>
+                    <h3 class="tool-title">{{ get_translation('SNMP命令生成器') }}</h3>
                     <p class="tool-description">
-                        智能生成SNMP命令工具，支持MIB Table和叶子节点查询，自动构建精确的snmpwalk和snmpget命令。
+                        {{ get_translation('生成SNMP查询命令，支持v1/v2c/v3协议') }}
                     </p>
                     <ul class="tool-features">
                         <li>支持snmpwalk和snmpget命令生成</li>
@@ -269,7 +269,7 @@
                         <li>一键复制生成的命令</li>
                     </ul>
                     <a href="/oid-calculator" class="tool-link">
-                        <span>开始使用</span>
+                        <span>{{ get_translation('开始使用') }}</span>
                         <span>→</span>
                     </a>
                 </div>
@@ -277,9 +277,9 @@
                 <!-- MIB OID生成器 -->
                 <div class="tool-card">
                     <span class="tool-icon">🎯</span>
-                    <h3 class="tool-title">MIB表OID生成器</h3>
+                    <h3 class="tool-title">{{ get_translation('MIB OID生成器') }}</h3>
                     <p class="tool-description">
-                        专业的MIB表OID生成工具，针对特殊MIB表，根据用户选项智能生成对应的OID，支持多种输出格式。
+                        {{ get_translation('智能OID路径计算和生成，支持批量处理') }}
                     </p>
                     <ul class="tool-features">
                         <li>支持标准MIB表和自定义表</li>
@@ -288,14 +288,14 @@
                         <li>预设模板和批量生成</li>
                     </ul>
                     <a href="/mib-oid-generator" class="tool-link">
-                        <span>开始使用</span>
+                        <span>{{ get_translation('开始使用') }}</span>
                         <span>→</span>
                     </a>
                 </div>
                 
                 <div class="tool-card coming-soon">
                     <span class="tool-icon">🔍</span>
-                    <h3 class="tool-title">网络扫描器</h3>
+                    <h3 class="tool-title">{{ get_translation('网络扫描器') }}</h3>
                     <p class="tool-description">
                         全面的网络扫描和发现工具，帮助您快速了解网络拓扑和设备状态。
                     </p>
@@ -306,14 +306,14 @@
                         <li>网络拓扑生成</li>
                     </ul>
                     <a href="#" class="tool-link" style="opacity: 0.5; cursor: not-allowed;">
-                        <span>即将推出</span>
+                        <span>{{ get_translation('即将推出') }}</span>
                         <span>🔒</span>
                     </a>
                 </div>
                 
                 <div class="tool-card coming-soon">
                     <span class="tool-icon">⚙️</span>
-                    <h3 class="tool-title">配置管理器</h3>
+                    <h3 class="tool-title">{{ get_translation('配置管理器') }}</h3>
                     <p class="tool-description">
                         网络设备配置备份和管理工具，支持多厂商设备和自动化配置部署。
                     </p>
@@ -324,7 +324,7 @@
                         <li>批量配置部署</li>
                     </ul>
                     <a href="#" class="tool-link" style="opacity: 0.5; cursor: not-allowed;">
-                        <span>即将推出</span>
+                        <span>{{ get_translation('即将推出') }}</span>
                         <span>🔒</span>
                     </a>
                 </div>
@@ -332,12 +332,12 @@
         </div>
         
         <div class="footer">
-            <p>© 2024 网络工具集 - 专业的网络管理解决方案</p>
+            <p>{{ get_translation('© 2024 网络工具集 - 专业的网络管理解决方案') }}</p>
             <p>
-                <a href="/mib-parser">MIB解析器</a> | 
-                <a href="/oid-calculator">SNMP命令生成器</a> | 
-                <a href="/mib-oid-generator">MIB OID生成器</a> | 
-                <span style="color: #9ca3af;">更多工具开发中...</span>
+                <a href="/mib-parser">{{ get_translation('MIB文件解析器') }}</a> | 
+                <a href="/oid-calculator">{{ get_translation('SNMP命令生成器') }}</a> | 
+                <a href="/mib-oid-generator">{{ get_translation('MIB OID生成器') }}</a> | 
+                <span style="color: #9ca3af;">{{ get_translation('更多工具开发中') }}</span>
             </p>
         </div>
     </div>
@@ -347,7 +347,7 @@
         document.querySelectorAll('.coming-soon .tool-link').forEach(link => {
             link.addEventListener('click', (e) => {
                 e.preventDefault();
-                alert('此工具正在开发中，敬请期待！');
+                alert('{{ get_translation("此工具正在开发中，敬请期待！") }}');
             });
         });
         

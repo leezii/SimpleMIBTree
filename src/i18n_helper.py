@@ -18,7 +18,16 @@ TRANSLATIONS = {
         '支持的格式：.mib, .txt, .my': '支持的格式：.mib, .txt, .my',
         '解析': '解析',
         '生成SNMP查询命令': '生成SNMP查询命令',
-        '生成MIB OID路径': '生成MIB OID路径'
+        '生成MIB OID路径': '生成MIB OID路径',
+        '可用工具': '可用工具',
+        '选择您需要的工具开始使用': '选择您需要的工具开始使用',
+        '开始使用': '开始使用',
+        '网络扫描器': '网络扫描器',
+        '配置管理器': '配置管理器',
+        '即将推出': '即将推出',
+        '更多工具开发中': '更多工具开发中',
+        '此工具正在开发中，敬请期待！': '此工具正在开发中，敬请期待！',
+        '© 2024 网络工具集 - 专业的网络管理解决方案': '© 2024 网络工具集 - 专业的网络管理解决方案'
     },
     'en': {
         '网络工具集': 'Network Tools',
@@ -34,7 +43,16 @@ TRANSLATIONS = {
         '支持的格式：.mib, .txt, .my': 'Supported formats: .mib, .txt, .my',
         '解析': 'Parse',
         '生成SNMP查询命令': 'Generate SNMP Query Commands',
-        '生成MIB OID路径': 'Generate MIB OID Paths'
+        '生成MIB OID路径': 'Generate MIB OID Paths',
+        '可用工具': 'Available Tools',
+        '选择您需要的工具开始使用': 'Choose the tool you need to get started',
+        '开始使用': 'Get Started',
+        '网络扫描器': 'Network Scanner',
+        '配置管理器': 'Configuration Manager',
+        '即将推出': 'Coming Soon',
+        '更多工具开发中': 'More tools in development...',
+        '此工具正在开发中，敬请期待！': 'This tool is under development, stay tuned!',
+        '© 2024 网络工具集 - 专业的网络管理解决方案': '© 2024 Network Tools - Professional Network Management Solutions'
     }
 }
 
