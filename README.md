@@ -13,6 +13,13 @@
 
 ## 🌟 功能特点
 
+### 🌐 国际化支持
+- 🌍 **多语言支持**：中文和英文界面切换
+- 🔄 **实时切换**：支持URL参数和链接切换
+- 💾 **会话记忆**：语言偏好自动保存
+- 🎯 **智能检测**：首次访问根据浏览器语言自动选择
+- 📱 **全站支持**：所有页面和功能都支持多语言
+
 ### 🌳 MIB文件解析器
 - 📁 支持拖拽上传MIB文件
 - 🌳 **可点击的**树形结构展示MIB对象
@@ -121,7 +128,13 @@ cd src && python app.py
 - 支持批量生成和格式验证
 - 可一键复制生成的OID结果
 
-### 5. 查看MIB解析结果
+### 5. 语言切换功能
+- **URL参数切换**：直接访问 `http://localhost:5000/?lang=en`（英文）或 `http://localhost:5000/?lang=zh`（中文）
+- **页面链接切换**：点击页面右上角的"中文"/"English"链接
+- **自动语言检测**：首次访问时根据浏览器语言自动选择界面语言
+- **会话记忆**：语言偏好会在整个会话期间保持，无需重复设置
+
+### 6. 查看MIB解析结果
 - 解析完成后将显示**层次化的**树形结构
 - **点击任意节点**可展开/折叠子项（不仅仅是箭头）
 - 每个节点显示名称、类型、OID和详细信息
@@ -165,7 +178,18 @@ flask_web/
 │   ├── config.py          # 配置文件
 │   ├── routes.py          # 路由模块
 │   ├── file_handler.py    # 文件处理模块
-│   └── mib_parser.py     # MIB解析模块
+│   ├── mib_parser.py     # MIB解析模块
+│   └── i18n/             # 国际化模块
+│       └── __init__.py   # Babel国际化配置
+├── locales/               # 翻译文件目录
+│   ├── zh/               # 中文翻译
+│   │   └── LC_MESSAGES/
+│   │       ├── messages.po # 翻译源文件
+│   │       └── messages.mo # 编译后的翻译文件
+│   └── en/               # 英文翻译
+│       └── LC_MESSAGES/
+│           ├── messages.po # 翻译源文件
+│           └── messages.mo # 编译后的翻译文件
 ├── tests/                 # 测试文件
 │   ├── test_mib_parser.py # MIB解析器测试
 │   ├── test_multi_mib.py  # 多文件上传测试
@@ -182,6 +206,7 @@ flask_web/
 │   └── mib_oid_generator.html # MIB OID生成器页面
 ├── uploads/              # 上传文件目录
 ├── requirements.txt       # Python依赖包
+├── babel.cfg            # Babel配置文件
 ├── README.md             # 项目说明文档
 ├── DEPLOYMENT.md         # 部署说明
 └── venv/                 # Python虚拟环境
@@ -216,6 +241,7 @@ flask_web/
 
 - **后端**: Python Flask
 - **前端**: HTML5, CSS3, JavaScript
+- **国际化**: Flask-Babel (支持多语言切换)
 - **MIB解析**: 自定义解析器（基于正则表达式）
 - **UI框架**: 原生CSS + JavaScript
 

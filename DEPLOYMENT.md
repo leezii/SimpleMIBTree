@@ -29,6 +29,9 @@ source venv/bin/activate
 
 # 安装依赖
 pip install -r requirements.txt
+
+# 编译翻译文件（重要！）
+pybabel compile -d locales
 ```
 
 ---
@@ -224,6 +227,10 @@ FLASK_ENV=production
 SECRET_KEY=your-secret-key-here
 UPLOAD_FOLDER=/app/uploads
 MAX_CONTENT_LENGTH=52428800  # 50MB
+
+# 国际化配置
+BABEL_DEFAULT_LOCALE=zh  # 默认语言：zh 或 en
+BABEL_TRANSLATION_DIRECTORIES=/app/locales
 ```
 
 ### 2. 安全配置
@@ -376,6 +383,9 @@ location ~* \.(js|css|png|jpg|jpeg|gif|ico|svg)$ {
 - [ ] 备份策略已实施
 - [ ] 性能测试已完成
 - [ ] 安全检查已通过
+- [ ] **翻译文件已编译** (`pybabel compile -d locales`)
+- [ ] **国际化配置已验证** (测试中英文切换)
+- [ ] **语言文件权限已设置** (确保应用可读取 locales/ 目录)
 
 ---
 

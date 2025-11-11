@@ -71,6 +71,8 @@ sudo systemctl restart nginx
 - `SECRET_KEY=your-secret-key`
 - `UPLOAD_FOLDER=/app/uploads`
 - `MAX_CONTENT_LENGTH=52428800`
+- `BABEL_DEFAULT_LOCALE=zh`  # 默认语言：zh 或 en
+- `BABEL_TRANSLATION_DIRECTORIES=/app/locales`
 
 ### 端口配置
 - Flask应用：5000
@@ -89,6 +91,8 @@ sudo systemctl restart nginx
 3. **安全配置**：生产环境必须配置HTTPS和防火墙
 4. **监控设置**：建议配置日志轮转和监控告警
 5. **备份策略**：定期备份上传的文件和配置
+6. **国际化配置**：部署前必须运行 `pybabel compile -d locales` 编译翻译文件
+7. **语言文件权限**：确保应用有权限读取 `locales/` 目录及其子目录
 
 ## 📞 故障排除
 
