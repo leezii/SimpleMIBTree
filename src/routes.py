@@ -19,17 +19,20 @@ def index():
 @main_bp.route('/mib-parser')
 def mib_parser_page():
     """MIB 解析器页面"""
-    return render_template('mib_parser.html')
+    lang = session.get('language', request.args.get('lang', 'zh'))
+    return render_template('mib_parser.html', lang=lang, get_translation=lambda text: get_translation(text, lang))
 
 @main_bp.route('/oid-calculator')
 def oid_calculator_page():
     """SNMP命令生成器页面"""
-    return render_template('oid_calculator.html')
+    lang = session.get('language', request.args.get('lang', 'zh'))
+    return render_template('oid_calculator.html', lang=lang, get_translation=lambda text: get_translation(text, lang))
 
 @main_bp.route('/mib-oid-generator')
 def mib_oid_generator_page():
     """MIB表OID生成器页面"""
-    return render_template('mib_oid_generator.html')
+    lang = session.get('language', request.args.get('lang', 'zh'))
+    return render_template('mib_oid_generator.html', lang=lang, get_translation=lambda text: get_translation(text, lang))
 
 @main_bp.route('/set-language')
 def set_language():
