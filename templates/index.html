@@ -66,6 +66,9 @@
             cursor: pointer;
             position: relative;
             overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
         }
         
         .tool-card::before {
@@ -132,6 +135,7 @@
         .tool-link {
             display: inline-flex;
             align-items: center;
+            justify-content: center;
             gap: 8px;
             background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
             color: white;
@@ -140,6 +144,9 @@
             border-radius: 8px;
             font-weight: 500;
             transition: all 0.3s ease;
+            min-width: 140px;
+            white-space: nowrap;
+            margin-top: auto;
         }
         
         .tool-link:hover {
