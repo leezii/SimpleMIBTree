@@ -4,6 +4,7 @@ import logging
 from flask import Flask
 from config import config
 from routes import main_bp
+from i18n import init_babel
 
 def create_app(config_name=None):
     """应用工厂函数"""
@@ -18,6 +19,9 @@ def create_app(config_name=None):
     
     # 确保上传目录存在
     os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+    
+    # 初始化国际化支持
+    init_babel(app)
     
     # 配置日志
     logging.basicConfig(

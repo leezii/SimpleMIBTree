@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ get_translation('MIB文件解析器') }}</title>
+    <title>{{ _('MIB文件解析器') }}</title>
     <style>
         * {
             margin: 0;
@@ -375,12 +375,12 @@
         <div class="header">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
                 <div>
-                    <h1>🌳 {{ get_translation('MIB文件解析器') }}</h1>
-                    <p>{{ get_translation('上传并解析SNMP MIB文件，以树形结构查看管理信息库') }}</p>
+                    <h1>🌳 {{ _('MIB文件解析器') }}</h1>
+                    <p>{{ _('上传并解析SNMP MIB文件，以树形结构查看管理信息库') }}</p>
                 </div>
                 <a href="/" style="background: rgba(255,255,255,0.2); color: white; text-decoration: none; padding: 10px 20px; border-radius: 8px; font-weight: 500; transition: all 0.3s ease; display: flex; align-items: center; gap: 8px;">
                     <span>←</span>
-                    <span>{{ get_translation('返回主页') }}</span>
+                    <span>{{ _('返回主页') }}</span>
                 </a>
             </div>
         </div>
@@ -388,29 +388,29 @@
         <div class="upload-section">
             <div class="upload-area" id="upload-area">
                 <div class="upload-icon">📁</div>
-                <div class="upload-text">{{ get_translation('点击或拖拽MIB文件到此处') }}</div>
-                <div class="upload-hint">{{ get_translation('支持 .mib, .txt, .my 格式文件，可选择多个文件，也支持包含MIB文件的ZIP压缩包') }}</div>
+                <div class="upload-text">{{ _('点击或拖拽MIB文件到此处') }}</div>
+                <div class="upload-hint">{{ _('支持 .mib, .txt, .my 格式文件，可选择多个文件，也支持包含MIB文件的ZIP压缩包') }}</div>
                 <input type="file" id="file-input" accept=".mib,.txt,.my,.zip" multiple>
-                <button class="btn" onclick="document.getElementById('file-input').click()">{{ get_translation('选择文件') }}</button>
+                <button class="btn" onclick="document.getElementById('file-input').click()">{{ _('选择文件') }}</button>
             </div>
         </div>
         
         <div class="loading" id="loading">
             <div class="spinner"></div>
-            <p>{{ get_translation('正在解析MIB文件，请稍候...') }}</p>
+            <p>{{ _('正在解析MIB文件，请稍候...') }}</p>
         </div>
         
         <div class="alert" id="alert"></div>
         
         <div class="results-section" id="results">
-            <button class="btn back-btn" onclick="resetParser()">{{ get_translation('返回上传') }}</button>
+            <button class="btn back-btn" onclick="resetParser()">{{ _('返回上传') }}</button>
             <div class="results-header">
                 <div class="results-title">
-                    <h2>{{ get_translation('解析结果') }}</h2>
+                    <h2>{{ _('解析结果') }}</h2>
                 </div>
                 <button class="detail-toggle-btn" id="detail-toggle-btn" onclick="toggleModuleInfo()">
                     <span id="detail-icon">📊</span>
-                    <span id="detail-text">{{ get_translation('隐藏详情') }}</span>
+                    <span id="detail-text">{{ _('隐藏详情') }}</span>
                 </button>
             </div>
             <div class="module-info" id="module-info"></div>
@@ -468,12 +468,12 @@
             }
             
             if (invalidFiles.length > 0) {
-                showAlert(`{{ get_translation('以下文件格式无效') }}: ${invalidFiles.join(', ')}，{{ get_translation('请只上传 .mib, .txt, .my, .zip 格式文件') }}`, 'error');
+                showAlert(`{{ _('以下文件格式无效') }}: ${invalidFiles.join(', ')}，{{ _('请只上传 .mib, .txt, .my, .zip 格式文件') }}`, 'error');
                 return;
             }
             
             if (validFiles.length === 0) {
-                showAlert('{{ get_translation("请选择有效的MIB文件格式 (.mib, .txt, .my, .zip)") }}', 'error');
+                showAlert('{{ _("请选择有效的MIB文件格式 (.mib, .txt, .my, .zip)") }}', 'error');
                 return;
             }
 
@@ -494,14 +494,14 @@
                 showLoading(false);
                 if (data.success) {
                     showResults(data);
-                    showAlert(`{{ get_translation('成功解析') }} ${validFiles.length} {{ get_translation('个MIB文件！') }}`, 'success');
+                    showAlert(`{{ _('成功解析') }} ${validFiles.length} {{ _('个MIB文件！') }}`, 'success');
                 } else {
-                    showAlert('{{ get_translation('解析失败') }}: ' + data.error, 'error');
+                    showAlert('{{ _('解析失败') }}: ' + data.error, 'error');
                 }
             })
             .catch(error => {
                 showLoading(false);
-                showAlert('{{ get_translation('网络错误') }}: ' + error.message, 'error');
+                showAlert('{{ _('网络错误') }}: ' + error.message, 'error');
             });
         }
 
@@ -540,36 +540,36 @@
         }
 
         function showResults(data) {
-            let moduleInfoHtml = '<h3>{{ get_translation('解析结果') }}</h3>';
+            let moduleInfoHtml = '<h3>{{ _('解析结果') }}</h3>';
             
             // 显示ZIP文件信息
             if (data.zip_info && data.zip_info.length > 0) {
                 moduleInfoHtml += '<div style="background: #fef3c7; border: 1px solid #fbbf24; border-radius: 6px; padding: 10px; margin-bottom: 15px;">';
                 moduleInfoHtml += '<h4 style="margin: 0 0 8px 0; color: #92400e;">📦 ZIP文件处理信息</h4>';
                 data.zip_info.forEach(zip => {
-                    moduleInfoHtml += `<p style="margin: 4px 0; font-size: 0.9rem;"><strong>${zip.filename}</strong>: {{ get_translation('提取了') }} ${zip.extracted_files} {{ get_translation('个MIB文件') }}</p>`;
+                    moduleInfoHtml += `<p style="margin: 4px 0; font-size: 0.9rem;"><strong>${zip.filename}</strong>: {{ _('提取了') }} ${zip.extracted_files} {{ _('个MIB文件') }}</p>`;
                 });
                 moduleInfoHtml += '</div>';
             }
             
             if (data.modules && data.modules.length > 0) {
                 // 多模块情况
-                moduleInfoHtml += `<p><strong>{{ get_translation('解析的模块数量') }}:</strong> ${data.modules.length}</p>`;
+                moduleInfoHtml += `<p><strong>{{ _('解析的模块数量') }}:</strong> ${data.modules.length}</p>`;
                 moduleInfoHtml += '<div style="margin-top: 10px;">';
                 data.modules.forEach(module => {
                     moduleInfoHtml += `
                         <div style="background: #f8fafc; padding: 10px; margin: 5px 0; border-radius: 6px; border-left: 4px solid #4f46e5;">
-                            <strong>${module.name}</strong> - ${module.object_count} {{ get_translation('个对象') }}
+                            <strong>${module.name}</strong> - ${module.object_count} {{ _('个对象') }}
                         </div>
                     `;
                 });
                 moduleInfoHtml += '</div>';
-                moduleInfoHtml += `<p><strong>{{ get_translation('总对象数量') }}:</strong> ${data.total_objects}</p>`;
+                moduleInfoHtml += `<p><strong>{{ _('总对象数量') }}:</strong> ${data.total_objects}</p>`;
             } else {
                 // 单模块情况（向后兼容）
                 moduleInfoHtml += `
-                    <p><strong>{{ get_translation('模块名称') }}:</strong> ${data.module}</p>
-                    <p><strong>{{ get_translation('对象数量') }}:</strong> ${data.tree.length}</p>
+                    <p><strong>{{ _('模块名称') }}:</strong> ${data.module}</p>
+                    <p><strong>{{ _('对象数量') }}:</strong> ${data.tree.length}</p>
                 `;
             }
             
@@ -777,7 +777,7 @@
             moduleInfoDiv.classList.remove('hidden');
             toggleBtn.classList.remove('hidden');
             detailIcon.textContent = '📊';
-            detailText.textContent = '{{ get_translation('隐藏详情') }}';
+            detailText.textContent = '{{ _('隐藏详情') }}';
         }
 
         function hideModuleInfo() {
@@ -789,7 +789,7 @@
             moduleInfoDiv.classList.add('hidden');
             toggleBtn.classList.add('hidden');
             detailIcon.textContent = '📋';
-            detailText.textContent = '{{ get_translation('显示详情') }}';
+            detailText.textContent = '{{ _('显示详情') }}';
         }
 
         function resetParser() {

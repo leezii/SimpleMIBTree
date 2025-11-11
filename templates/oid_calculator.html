@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ get_translation('SNMP命令生成器') }}</title>
+    <title>{{ _('SNMP命令生成器') }}</title>
     <style>
         * {
             margin: 0;
@@ -306,12 +306,12 @@
         <div class="header">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
                 <div>
-                    <h1>🧮 {{ get_translation('SNMP命令生成器') }}</h1>
-                    <p>{{ get_translation('生成精确的SNMP命令，支持MIB Table和叶子节点查询') }}</p>
+                    <h1>🧮 {{ _('SNMP命令生成器') }}</h1>
+                    <p>{{ _('生成精确的SNMP命令，支持MIB Table和叶子节点查询') }}</p>
                 </div>
                 <a href="/" style="background: rgba(255,255,255,0.2); color: white; text-decoration: none; padding: 10px 20px; border-radius: 8px; font-weight: 500; transition: all 0.3s ease; display: flex; align-items: center; gap: 8px;">
                     <span>←</span>
-                    <span>{{ get_translation('返回主页') }}</span>
+                    <span>{{ _('返回主页') }}</span>
                 </a>
             </div>
         </div>
@@ -319,7 +319,7 @@
         <div class="main-content">
             <div class="form-section">
                 <div class="form-group">
-                    <label>{{ get_translation('查询类型') }}</label>
+                    <label>{{ _('查询类型') }}</label>
                     <div class="radio-group">
                         <label class="radio-option selected">
                             <input type="radio" name="query_type" value="table" checked>
@@ -327,34 +327,34 @@
                         </label>
                         <label class="radio-option">
                             <input type="radio" name="query_type" value="leaf">
-                            <span>{{ get_translation('叶子节点') }} (snmpget)</span>
+                            <span>{{ _('叶子节点') }} (snmpget)</span>
                         </label>
                     </div>
                 </div>
                 
                 <div class="form-group">
-                    <label for="oid">{{ get_translation('OID或MIB名称') }}</label>
-                    <input type="text" id="oid" placeholder="{{ get_translation('例如: 1.3.6.1.2.1.2.2 或 ifTable') }}">
-                    <div class="help-text">{{ get_translation('输入完整的OID数字或MIB名称，支持标准MIB和自定义MIB') }}</div>
+                    <label for="oid">{{ _('OID或MIB名称') }}</label>
+                    <input type="text" id="oid" placeholder="{{ _('例如: 1.3.6.1.2.1.2.2 或 ifTable') }}">
+                    <div class="help-text">{{ _('输入完整的OID数字或MIB名称，支持标准MIB和自定义MIB') }}</div>
                 </div>
                 
                 <div class="form-row">
                     <div class="form-group">
-                        <label for="target_ip">{{ get_translation('目标设备IP') }}</label>
-                        <input type="text" id="target_ip" placeholder="{{ get_translation('例如: 192.168.1.1') }}" value="192.168.1.1">
-                        <div class="help-text">{{ get_translation('SNMP设备的IP地址') }}</div>
+                        <label for="target_ip">{{ _('目标设备IP') }}</label>
+                        <input type="text" id="target_ip" placeholder="{{ _('例如: 192.168.1.1') }}" value="192.168.1.1">
+                        <div class="help-text">{{ _('SNMP设备的IP地址') }}</div>
                     </div>
                     
                     <div class="form-group">
-                        <label for="community">{{ get_translation('Community字符串') }}</label>
-                        <input type="text" id="community" placeholder="{{ get_translation('例如: public') }}" value="public">
-                        <div class="help-text">{{ get_translation('SNMP community字符串') }}</div>
+                        <label for="community">{{ _('Community字符串') }}</label>
+                        <input type="text" id="community" placeholder="{{ _('例如: public') }}" value="public">
+                        <div class="help-text">{{ _('SNMP community字符串') }}</div>
                     </div>
                 </div>
                 
                 <div class="form-row">
                     <div class="form-group">
-                        <label for="version">{{ get_translation('SNMP版本') }}</label>
+                        <label for="version">{{ _('SNMP版本') }}</label>
                         <select id="version">
                             <option value="1">SNMPv1</option>
                             <option value="2c" selected>SNMPv2c</option>
@@ -363,21 +363,21 @@
                     </div>
                     
                     <div class="form-group">
-                        <label for="port">{{ get_translation('SNMP端口') }}</label>
-                        <input type="number" id="port" placeholder="{{ get_translation('例如: 161') }}" value="161">
-                        <div class="help-text">{{ get_translation('SNMP服务端口，默认161') }}</div>
+                        <label for="port">{{ _('SNMP端口') }}</label>
+                        <input type="number" id="port" placeholder="{{ _('例如: 161') }}" value="161">
+                        <div class="help-text">{{ _('SNMP服务端口，默认161') }}</div>
                     </div>
                 </div>
                 
                 <div class="form-group" id="snmpv3_options" style="display: none;">
-                    <label>{{ get_translation('SNMPv3 认证参数') }}</label>
+                    <label>{{ _('SNMPv3 认证参数') }}</label>
                     <div class="form-row">
                         <div class="form-group">
-                            <input type="text" id="username" placeholder="{{ get_translation('用户名') }}">
+                            <input type="text" id="username" placeholder="{{ _('用户名') }}">
                         </div>
                         <div class="form-group">
                             <select id="auth_protocol">
-                                <option value="">{{ get_translation('无认证') }}</option>
+                                <option value="">{{ _('无认证') }}</option>
                                 <option value="MD5">MD5</option>
                                 <option value="SHA">SHA</option>
                             </select>
@@ -385,42 +385,42 @@
                     </div>
                     <div class="form-row">
                         <div class="form-group">
-                            <input type="password" id="auth_password" placeholder="{{ get_translation('认证密码') }}">
+                            <input type="password" id="auth_password" placeholder="{{ _('认证密码') }}">
                         </div>
                         <div class="form-group">
                             <select id="priv_protocol">
-                                <option value="">{{ get_translation('无加密') }}</option>
+                                <option value="">{{ _('无加密') }}</option>
                                 <option value="DES">DES</option>
                                 <option value="AES">AES</option>
                             </select>
                         </div>
                     </div>
                     <div class="form-group">
-                        <input type="password" id="priv_password" placeholder="{{ get_translation('加密密码') }}">
+                        <input type="password" id="priv_password" placeholder="{{ _('加密密码') }}">
                     </div>
                 </div>
                 
                 <div class="form-group">
-                    <label for="additional_options">{{ get_translation('额外参数') }}</label>
-                    <textarea id="additional_options" placeholder="{{ get_translation('例如: -r 3 -t 10') }}"></textarea>
-                    <div class="help-text">{{ get_translation('可选的额外SNMP参数，如重试次数(-r)和超时时间(-t)') }}</div>
+                    <label for="additional_options">{{ _('额外参数') }}</label>
+                    <textarea id="additional_options" placeholder="{{ _('例如: -r 3 -t 10') }}"></textarea>
+                    <div class="help-text">{{ _('可选的额外SNMP参数，如重试次数(-r)和超时时间(-t)') }}</div>
                 </div>
                 
                 <div style="display: flex; gap: 10px;">
-                    <button class="btn" onclick="generateCommand()">{{ get_translation('生成命令') }}</button>
-                    <button class="btn btn-secondary" onclick="clearForm()">{{ get_translation('清空表单') }}</button>
+                    <button class="btn" onclick="generateCommand()">{{ _('生成命令') }}</button>
+                    <button class="btn btn-secondary" onclick="clearForm()">{{ _('清空表单') }}</button>
                 </div>
             </div>
             
             <div class="example-section">
-                <div class="example-title">📝 {{ get_translation('使用示例') }}</div>
+                <div class="example-title">📝 {{ _('使用示例') }}</div>
                 <div class="example-content">
-                    <strong>MIB Table {{ get_translation('示例') }}:</strong><br>
-                    OID: ifTable {{ get_translation('或') }} 1.3.6.1.2.1.2.2<br>
-                    {{ get_translation('生成') }}: snmpwalk -v2c -c public 192.168.1.1 ifTable<br><br>
-                    <strong>{{ get_translation('叶子节点') }} {{ get_translation('示例') }}:</strong><br>
-                    OID: sysDescr.0 {{ get_translation('或') }} 1.3.6.1.2.1.1.1.0<br>
-                    {{ get_translation('生成') }}: snmpget -v2c -c public 192.168.1.1 sysDescr.0
+                    <strong>MIB Table {{ _('示例') }}:</strong><br>
+                    OID: ifTable {{ _('或') }} 1.3.6.1.2.1.2.2<br>
+                    {{ _('生成') }}: snmpwalk -v2c -c public 192.168.1.1 ifTable<br><br>
+                    <strong>{{ _('叶子节点') }} {{ _('示例') }}:</strong><br>
+                    OID: sysDescr.0 {{ _('或') }} 1.3.6.1.2.1.1.1.0<br>
+                    {{ _('生成') }}: snmpget -v2c -c public 192.168.1.1 sysDescr.0
                 </div>
             </div>
             
@@ -429,12 +429,12 @@
             <div class="result-section" id="result">
                 <div class="result-header">
                     <div>
-                        <span class="command-type" id="command_type">{{ get_translation('SNMP命令') }}</span>
-                        <h3 class="result-title">{{ get_translation('生成的命令') }}</h3>
+                        <span class="command-type" id="command_type">{{ _('SNMP命令') }}</span>
+                        <h3 class="result-title">{{ _('生成的命令') }}</h3>
                     </div>
                     <button class="copy-btn" onclick="copyCommand()">
                         <span>📋</span>
-                        <span>{{ get_translation('复制命令') }}</span>
+                        <span>{{ _('复制命令') }}</span>
                     </button>
                 </div>
                 <div class="command-output">
@@ -481,24 +481,24 @@
             
             // 验证必填字段
             if (!oid) {
-                showAlert('{{ get_translation("请输入OID或MIB名称") }}', 'error');
+                showAlert('{{ _("请输入OID或MIB名称") }}', 'error');
                 return;
             }
             
             if (!targetIp) {
-                showAlert('{{ get_translation("请输入目标设备IP") }}', 'error');
+                showAlert('{{ _("请输入目标设备IP") }}', 'error');
                 return;
             }
             
             if (version !== '3' && !community) {
-                showAlert('{{ get_translation("请输入Community字符串") }}', 'error');
+                showAlert('{{ _("请输入Community字符串") }}', 'error');
                 return;
             }
             
             if (version === '3') {
                 const username = document.getElementById('username').value.trim();
                 if (!username) {
-                    showAlert('{{ get_translation("SNMPv3需要用户名") }}', 'error');
+                    showAlert('{{ _("SNMPv3需要用户名") }}', 'error');
                     return;
                 }
             }
@@ -555,11 +555,11 @@
             command += ` ${targetIp} ${oid}`;
             
             // 显示结果
-            document.getElementById('command_type').textContent = queryType === 'table' ? '{{ get_translation("SNMPWALK命令") }}' : '{{ get_translation("SNMPGET命令") }}';
+            document.getElementById('command_type').textContent = queryType === 'table' ? '{{ _("SNMPWALK命令") }}' : '{{ _("SNMPGET命令") }}';
             document.getElementById('command_output').textContent = command;
             resultSection.classList.add('show');
             
-            showAlert('{{ get_translation("命令生成成功！") }}', 'success');
+            showAlert('{{ _("命令生成成功！") }}', 'success');
             
             // 滚动到结果区域
             resultSection.scrollIntoView({ behavior: 'smooth' });
@@ -568,7 +568,7 @@
         function copyCommand() {
             const command = document.getElementById('command_output').textContent;
             navigator.clipboard.writeText(command).then(() => {
-                showAlert('{{ get_translation("命令已复制到剪贴板！") }}', 'success');
+                showAlert('{{ _("命令已复制到剪贴板！") }}', 'success');
             }).catch(() => {
                 // 降级方案
                 const textArea = document.createElement('textarea');
@@ -577,7 +577,7 @@
                 textArea.select();
                 document.execCommand('copy');
                 document.body.removeChild(textArea);
-                showAlert('{{ get_translation("命令已复制到剪贴板！") }}', 'success');
+                showAlert('{{ _("命令已复制到剪贴板！") }}', 'success');
             });
         }
         

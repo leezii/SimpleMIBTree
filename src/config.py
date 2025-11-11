@@ -11,6 +11,12 @@ class Config:
     MAX_CONTENT_LENGTH = 16 * 1024 * 1024  # 16MB max file size
     TEMPLATES_FOLDER = os.path.join(project_root, 'templates')
     
+    # Babel 配置
+    LANGUAGES = ['zh', 'en']
+    BABEL_TRANSLATION_DIRECTORIES = os.path.join(project_root, 'locales')
+    BABEL_DEFAULT_LOCALE = 'zh'
+    BABEL_DEFAULT_TIMEZONE = 'UTC'
+    
     # 允许的文件扩展名
     ALLOWED_EXTENSIONS = {'mib', 'txt', 'my', 'zip'}
     

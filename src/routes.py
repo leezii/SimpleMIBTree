@@ -3,7 +3,6 @@ import logging
 from flask import Blueprint, render_template, request, jsonify, session, redirect, url_for
 from file_handler import validate_and_process_files, save_uploaded_file, cleanup_file
 from mib_parser import mib_parser
-from i18n_helper import get_translation
 
 logger = logging.getLogger(__name__)
 
@@ -14,25 +13,25 @@ main_bp = Blueprint('main', __name__)
 def index():
     """导航页面（主页）"""
     lang = session.get('language', request.args.get('lang', 'zh'))
-    return render_template('index.html', lang=lang, get_translation=lambda text: get_translation(text, lang))
+    return render_template('index.html', lang=lang)
 
 @main_bp.route('/mib-parser')
 def mib_parser_page():
     """MIB 解析器页面"""
     lang = session.get('language', request.args.get('lang', 'zh'))
-    return render_template('mib_parser.html', lang=lang, get_translation=lambda text: get_translation(text, lang))
+    return render_template('mib_parser.html', lang=lang)
 
 @main_bp.route('/oid-calculator')
 def oid_calculator_page():
     """SNMP命令生成器页面"""
     lang = session.get('language', request.args.get('lang', 'zh'))
-    return render_template('oid_calculator.html', lang=lang, get_translation=lambda text: get_translation(text, lang))
+    return render_template('oid_calculator.html', lang=lang)
 
 @main_bp.route('/mib-oid-generator')
 def mib_oid_generator_page():
     """MIB表OID生成器页面"""
     lang = session.get('language', request.args.get('lang', 'zh'))
-    return render_template('mib_oid_generator.html', lang=lang, get_translation=lambda text: get_translation(text, lang))
+    return render_template('mib_oid_generator.html', lang=lang)
 
 @main_bp.route('/set-language')
 def set_language():
@@ -40,6 +39,7 @@ def set_language():
     lang = request.args.get('lang')
     if lang in ['zh', 'en']:
         session['language'] = lang
+        logger.info(f"语言已设置为: {lang}")
     # 重定向到之前的页面或首页
     return redirect(request.referrer or url_for('main.index'))
 

@@ -17,78 +17,544 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.17.0\n"
 
-#: templates/index.html:4
+# 主页
 msgid "网络工具集"
 msgstr "Network Tools"
 
-#: templates/index.html:8
 msgid "专业的网络管理和开发工具集合"
 msgstr "Professional Network Management and Development Tools"
 
-#: templates/index.html:15
 msgid "MIB文件解析器"
 msgstr "MIB File Parser"
 
-#: templates/index.html:16
 msgid "解析和展示MIB文件结构，支持树形显示和OID计算"
 msgstr "Parse and display MIB file structure with tree view and OID calculation"
 
-#: templates/index.html:22
 msgid "SNMP命令生成器"
 msgstr "SNMP Command Generator"
 
-#: templates/index.html:23
 msgid "生成SNMP查询命令，支持v1/v2c/v3协议"
 msgstr "Generate SNMP query commands supporting v1/v2c/v3 protocols"
 
-#: templates/index.html:29
 msgid "MIB OID生成器"
 msgstr "MIB OID Generator"
 
-#: templates/index.html:30
 msgid "智能OID路径计算和生成，支持批量处理"
 msgstr "Intelligent OID path calculation and generation with batch processing"
 
-#: templates/mib_parser.html:4
-msgid "MIB文件解析器"
-msgstr "MIB File Parser"
-
-#: templates/mib_parser.html:8
 msgid "上传MIB文件进行解析"
 msgstr "Upload MIB file for parsing"
 
-#: templates/mib_parser.html:12
 msgid "选择文件或拖拽到此处"
 msgstr "Choose file or drag and drop here"
 
-#: templates/mib_parser.html:13
 msgid "支持的格式：.mib, .txt, .my"
 msgstr "Supported formats: .mib, .txt, .my"
 
-#: templates/mib_parser.html:18
 msgid "解析"
 msgstr "Parse"
 
-#: templates/oid_calculator.html:4
-msgid "SNMP命令生成器"
-msgstr "SNMP Command Generator"
-
-#: templates/oid_calculator.html:8
 msgid "生成SNMP查询命令"
 msgstr "Generate SNMP Query Commands"
 
-#: templates/mib_oid_generator.html:4
-msgid "MIB OID生成器"
-msgstr "MIB OID Generator"
-
-#: templates/mib_oid_generator.html:8
 msgid "生成MIB OID路径"
 msgstr "Generate MIB OID Paths"
 
-#: src/routes.py:10
-msgid "首页"
-msgstr "Home"
+msgid "可用工具"
+msgstr "Available Tools"
 
-#: src/routes.py:15
-msgid "关于"
-msgstr "About"
+msgid "选择您需要的工具开始使用"
+msgstr "Choose the tool you need to get started"
+
+msgid "开始使用"
+msgstr "Get Started"
+
+msgid "网络扫描器"
+msgstr "Network Scanner"
+
+msgid "配置管理器"
+msgstr "Configuration Manager"
+
+msgid "即将推出"
+msgstr "Coming Soon"
+
+msgid "更多工具开发中"
+msgstr "More tools in development..."
+
+msgid "此工具正在开发中，敬请期待！"
+msgstr "This tool is under development, stay tuned!"
+
+msgid "© 2024 网络工具集 - 专业的网络管理解决方案"
+msgstr "© 2024 Network Tools - Professional Network Management Solutions"
+
+# 主页功能特性
+msgid "批量文件上传和ZIP压缩包支持"
+msgstr "Batch file upload and ZIP package support"
+
+msgid "交互式树形结构展示"
+msgstr "Interactive tree structure display"
+
+msgid "详细的OID和语法信息"
+msgstr "Detailed OID and syntax information"
+
+msgid "支持snmpwalk和snmpget命令生成"
+msgstr "Supports snmpwalk and snmpget command generation"
+
+msgid "完整的SNMPv1/v2c/v3支持"
+msgstr "Complete SNMPv1/v2c/v3 support"
+
+msgid "智能参数配置和验证"
+msgstr "Intelligent parameter configuration and validation"
+
+msgid "一键复制生成的命令"
+msgstr "One-click copy generated commands"
+
+msgid "支持标准MIB表和自定义表"
+msgstr "Supports standard MIB tables and custom tables"
+
+msgid "智能索引处理和OID生成"
+msgstr "Intelligent index processing and OID generation"
+
+msgid "多种输出格式（OID/命令/表格）"
+msgstr "Multiple output formats (OID/Command/Table)"
+
+msgid "预设模板和批量生成"
+msgstr "Preset templates and batch generation"
+
+msgid "全面的网络扫描和发现工具，帮助您快速了解网络拓扑和设备状态。"
+msgstr "Comprehensive network scanning and discovery tools to help you quickly understand network topology and device status."
+
+msgid "IP范围扫描"
+msgstr "IP range scanning"
+
+msgid "端口扫描检测"
+msgstr "Port scanning detection"
+
+msgid "设备类型识别"
+msgstr "Device type identification"
+
+msgid "网络拓扑生成"
+msgstr "Network topology generation"
+
+msgid "网络设备配置备份和管理工具，支持多厂商设备和自动化配置部署。"
+msgstr "Network device configuration backup and management tool, supporting multi-vendor devices and automated configuration deployment."
+
+msgid "多厂商设备支持"
+msgstr "Multi-vendor device support"
+
+msgid "配置自动备份"
+msgstr "Automatic configuration backup"
+
+msgid "配置变更对比"
+msgstr "Configuration change comparison"
+
+msgid "批量配置部署"
+msgstr "Batch configuration deployment"
+
+# MIB解析器页面
+msgid "上传并解析SNMP MIB文件，以树形结构查看管理信息库"
+msgstr "Upload and parse SNMP MIB files, view management information base in tree structure"
+
+msgid "返回主页"
+msgstr "Back to Home"
+
+msgid "点击或拖拽MIB文件到此处"
+msgstr "Click or drag MIB files here"
+
+msgid "支持 .mib, .txt, .my 格式文件，可选择多个文件，也支持包含MIB文件的ZIP压缩包"
+msgstr "Supports .mib, .txt, .my format files, multiple files selection, and ZIP packages containing MIB files"
+
+msgid "选择文件"
+msgstr "Choose Files"
+
+msgid "正在解析MIB文件，请稍候..."
+msgstr "Parsing MIB files, please wait..."
+
+msgid "解析结果"
+msgstr "Parse Results"
+
+msgid "隐藏详情"
+msgstr "Hide Details"
+
+msgid "显示详情"
+msgstr "Show Details"
+
+msgid "返回上传"
+msgstr "Back to Upload"
+
+msgid "成功解析"
+msgstr "Successfully parsed"
+
+msgid "个MIB文件！"
+msgstr " MIB files!"
+
+msgid "解析失败"
+msgstr "Parse failed"
+
+msgid "网络错误"
+msgstr "Network error"
+
+msgid "以下文件格式无效"
+msgstr "The following file formats are invalid"
+
+msgid "请只上传 .mib, .txt, .my, .zip 格式文件"
+msgstr "Please upload only .mib, .txt, .my, .zip format files"
+
+msgid "请选择有效的MIB文件格式 (.mib, .txt, .my, .zip)"
+msgstr "Please select valid MIB file formats (.mib, .txt, .my, .zip)"
+
+msgid "没有选择文件"
+msgstr "No file selected"
+
+# SNMP命令生成器页面
+msgid "生成精确的SNMP命令，支持MIB Table和叶子节点查询"
+msgstr "Generate precise SNMP commands, supporting MIB Table and leaf node queries"
+
+msgid "查询类型"
+msgstr "Query Type"
+
+msgid "MIB Table (snmpwalk)"
+msgstr "MIB Table (snmpwalk)"
+
+msgid "叶子节点 (snmpget)"
+msgstr "Leaf Node (snmpget)"
+
+msgid "OID或MIB名称"
+msgstr "OID or MIB Name"
+
+msgid "例如: 1.3.6.1.2.1.2.2 或 ifTable"
+msgstr "e.g.: 1.3.6.1.2.1.2.2 or ifTable"
+
+msgid "输入完整的OID数字或MIB名称，支持标准MIB和自定义MIB"
+msgstr "Enter complete OID numbers or MIB names, supports standard and custom MIBs"
+
+msgid "目标设备IP"
+msgstr "Target Device IP"
+
+msgid "例如: 192.168.1.1"
+msgstr "e.g.: 192.168.1.1"
+
+msgid "SNMP设备的IP地址"
+msgstr "IP address of the SNMP device"
+
+msgid "Community字符串"
+msgstr "Community String"
+
+msgid "例如: public"
+msgstr "e.g.: public"
+
+msgid "SNMP community字符串"
+msgstr "SNMP community string"
+
+msgid "SNMP版本"
+msgstr "SNMP Version"
+
+msgid "SNMP端口"
+msgstr "SNMP Port"
+
+msgid "例如: 161"
+msgstr "e.g.: 161"
+
+msgid "SNMP服务端口，默认161"
+msgstr "SNMP service port, default 161"
+
+msgid "SNMPv3 认证参数"
+msgstr "SNMPv3 Authentication Parameters"
+
+msgid "用户名"
+msgstr "Username"
+
+msgid "无认证"
+msgstr "No Authentication"
+
+msgid "认证密码"
+msgstr "Authentication Password"
+
+msgid "无加密"
+msgstr "No Encryption"
+
+msgid "加密密码"
+msgstr "Encryption Password"
+
+msgid "额外参数"
+msgstr "Additional Parameters"
+
+msgid "例如: -r 3 -t 10"
+msgstr "e.g.: -r 3 -t 10"
+
+msgid "可选的额外SNMP参数，如重试次数(-r)和超时时间(-t)"
+msgstr "Optional additional SNMP parameters, such as retry count (-r) and timeout (-t)"
+
+msgid "生成命令"
+msgstr "Generate Command"
+
+msgid "清空表单"
+msgstr "Clear Form"
+
+msgid "使用示例"
+msgstr "Usage Examples"
+
+msgid "MIB Table示例:"
+msgstr "MIB Table Example:"
+
+msgid "生成:"
+msgstr "Generate:"
+
+msgid "叶子节点示例:"
+msgstr "Leaf Node Example:"
+
+msgid "生成的命令"
+msgstr "Generated Command"
+
+msgid "复制命令"
+msgstr "Copy Command"
+
+msgid "SNMP命令"
+msgstr "SNMP Command"
+
+msgid "SNMPWALK命令"
+msgstr "SNMPWALK Command"
+
+msgid "SNMPGET命令"
+msgstr "SNMPGET Command"
+
+msgid "命令生成成功！"
+msgstr "Command generated successfully!"
+
+msgid "命令已复制到剪贴板！"
+msgstr "Command copied to clipboard!"
+
+msgid "请输入OID或MIB名称"
+msgstr "Please enter OID or MIB name"
+
+msgid "请输入目标设备IP"
+msgstr "Please enter target device IP"
+
+msgid "请输入Community字符串"
+msgstr "Please enter Community string"
+
+msgid "SNMPv3需要用户名"
+msgstr "SNMPv3 requires username"
+
+# MIB OID生成器页面
+msgid "MIB表OID生成器"
+msgstr "MIB Table OID Generator"
+
+msgid "针对特殊MIB表，根据用户选项智能生成对应的OID"
+msgstr "Intelligent OID generation for special MIB tables based on user options"
+
+msgid "配置选项"
+msgstr "Configuration Options"
+
+msgid "生成结果"
+msgstr "Generation Results"
+
+msgid "MIB表类型"
+msgstr "MIB Table Type"
+
+msgid "请选择表类型"
+msgstr "Please select table type"
+
+msgid "接口表 (ifTable/ifXTable)"
+msgstr "Interface Table (ifTable/ifXTable)"
+
+msgid "IP地址表 (ipAddrTable)"
+msgstr "IP Address Table (ipAddrTable)"
+
+msgid "路由表 (ipRouteTable)"
+msgstr "Routing Table (ipRouteTable)"
+
+msgid "TCP连接表 (tcpConnTable)"
+msgstr "TCP Connection Table (tcpConnTable)"
+
+msgid "UDP监听表 (udpTable)"
+msgstr "UDP Listener Table (udpTable)"
+
+msgid "自定义表"
+msgstr "Custom Table"
+
+msgid "选择要生成OID的MIB表类型"
+msgstr "Select MIB table type for OID generation"
+
+msgid "基础OID"
+msgstr "Base OID"
+
+msgid "例如: 1.3.6.1.2.1.2.2"
+msgstr "e.g.: 1.3.6.1.2.1.2.2"
+
+msgid "表的基础OID，选择表类型后自动填充"
+msgstr "Base OID of the table, auto-filled after selecting table type"
+
+msgid "索引值"
+msgstr "Index Values"
+
+msgid "输入索引值，每行一个"
+msgstr "Enter index values, one per line"
+
+msgid "例如:"
+msgstr "e.g.:"
+
+msgid "或者:"
+msgstr "or:"
+
+msgid "输入表的索引值，支持数字和IP地址格式"
+msgstr "Enter table index values, supports numeric and IP address formats"
+
+msgid "选择列"
+msgstr "Select Columns"
+
+msgid "所有列"
+msgstr "All Columns"
+
+msgid "选择要生成OID的列，按住Ctrl多选"
+msgstr "Select columns for OID generation, hold Ctrl for multiple selection"
+
+msgid "输出格式"
+msgstr "Output Format"
+
+msgid "纯OID"
+msgstr "Pure OID"
+
+msgid "snmpget命令"
+msgstr "snmpget Command"
+
+msgid "snmpwalk命令"
+msgstr "snmpwalk Command"
+
+msgid "表格格式"
+msgstr "Table Format"
+
+msgid "目标IP (可选)"
+msgstr "Target IP (Optional)"
+
+msgid "生成命令时需要"
+msgstr "Required for command generation"
+
+msgid "生成OID"
+msgstr "Generate OID"
+
+msgid "清空"
+msgstr "Clear"
+
+msgid "导出结果"
+msgstr "Export Results"
+
+msgid "生成的OID将在这里显示..."
+msgstr "Generated OIDs will be displayed here..."
+
+msgid "复制全部"
+msgstr "Copy All"
+
+msgid "清空结果"
+msgstr "Clear Results"
+
+msgid "快速模板"
+msgstr "Quick Templates"
+
+msgid "点击模板快速填充常用配置"
+msgstr "Click template to quickly fill common configurations"
+
+msgid "基础接口信息"
+msgstr "Basic Interface Information"
+
+msgid "获取所有接口的基本信息"
+msgstr "Get basic information of all interfaces"
+
+msgid "接口状态监控"
+msgstr "Interface Status Monitoring"
+
+msgid "监控接口运行状态和流量"
+msgstr "Monitor interface operational status and traffic"
+
+msgid "IP地址信息"
+msgstr "IP Address Information"
+
+msgid "获取设备所有IP地址"
+msgstr "Get all IP addresses of the device"
+
+msgid "路由表查询"
+msgstr "Routing Table Query"
+
+msgid "获取设备路由表信息"
+msgstr "Get device routing table information"
+
+msgid "TCP连接监控"
+msgstr "TCP Connection Monitoring"
+
+msgid "监控当前TCP连接状态"
+msgstr "Monitor current TCP connection status"
+
+msgid "系统信息"
+msgstr "System Information"
+
+msgid "获取设备系统基本信息"
+msgstr "Get basic system information of the device"
+
+msgid "高级选项"
+msgstr "Advanced Options"
+
+msgid "自定义列名"
+msgstr "Custom Column Names"
+
+msgid "用逗号分隔多个列名，用于自定义表类型"
+msgstr "Separate multiple column names with commas, for custom table types"
+
+msgid "请输入基础OID"
+msgstr "Please enter base OID"
+
+msgid "请输入索引值"
+msgstr "Please enter index values"
+
+msgid "请至少选择一列"
+msgstr "Please select at least one column"
+
+msgid "成功生成"
+msgstr "Successfully generated"
+
+msgid "个OID"
+msgstr " OIDs"
+
+msgid "结果已复制到剪贴板"
+msgstr "Results copied to clipboard"
+
+msgid "复制失败，请手动复制"
+msgstr "Copy failed, please copy manually"
+
+msgid "没有可导出的结果"
+msgstr "No results to export"
+
+msgid "结果已导出"
+msgstr "Results exported"
+
+msgid "已加载模板"
+msgstr "Template loaded"
+
+msgid "输入自定义表的基础OID"
+msgstr "Enter base OID for custom table"
+
+msgid "示例"
+msgstr "Example"
+
+msgid "或"
+msgstr "or"
+
+msgid "提取了"
+msgstr "extracted"
+
+msgid "个MIB文件"
+msgstr "MIB files"
+
+msgid "解析的模块数量"
+msgstr "Number of parsed modules"
+
+msgid "个对象"
+msgstr "objects"
+
+msgid "总对象数量"
+msgstr "Total object count"
+
+msgid "模块名称"
+msgstr "Module name"
+
+msgid "对象数量"
+msgstr "Object count"
