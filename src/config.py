@@ -5,22 +5,22 @@ import os
 project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 class Config:
-    """基础配置类"""
+    """Base configuration class"""
     SECRET_KEY = os.environ.get('SECRET_KEY') or 'dev-secret-key-change-in-production'
     UPLOAD_FOLDER = os.path.join(project_root, 'uploads')
     MAX_CONTENT_LENGTH = 16 * 1024 * 1024  # 16MB max file size
     TEMPLATES_FOLDER = os.path.join(project_root, 'templates')
     
-    # Babel 配置
+    # Babel configuration
     LANGUAGES = ['zh', 'en']
     BABEL_TRANSLATION_DIRECTORIES = os.path.join(project_root, 'locales')
     BABEL_DEFAULT_LOCALE = 'zh'
     BABEL_DEFAULT_TIMEZONE = 'UTC'
     
-    # 允许的文件扩展名
+    # Allowed file extensions
     ALLOWED_EXTENSIONS = {'mib', 'txt', 'my', 'zip'}
     
-    # 标准 OID 映射表
+    # Standard OID mapping table
     STANDARD_OID_MAP = {
         'iso': '1',
         'org': '1.3',

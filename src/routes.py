@@ -1,4 +1,4 @@
-"""路由模块"""
+"""Routing module"""
 import logging
 from flask import Blueprint, render_template, request, jsonify, session, redirect, url_for
 from file_handler import validate_and_process_files, save_uploaded_file, cleanup_file
@@ -6,61 +6,61 @@ from mib_parser import mib_parser
 
 logger = logging.getLogger(__name__)
 
-# 创建蓝图
+# Create blueprint
 main_bp = Blueprint('main', __name__)
 
 @main_bp.route('/')
 def index():
-    """导航页面（主页）"""
+    """Navigation page (homepage)"""
     lang = session.get('language', request.args.get('lang', 'zh'))
     return render_template('index.html', lang=lang)
 
 @main_bp.route('/mib-parser')
 def mib_parser_page():
-    """MIB 解析器页面"""
+    """MIB parser page"""
     lang = session.get('language', request.args.get('lang', 'zh'))
     return render_template('mib_parser.html', lang=lang)
 
 @main_bp.route('/oid-calculator')
 def oid_calculator_page():
-    """SNMP命令生成器页面"""
+    """SNMP command generator page"""
     lang = session.get('language', request.args.get('lang', 'zh'))
     return render_template('oid_calculator.html', lang=lang)
 
 @main_bp.route('/mib-oid-generator')
 def mib_oid_generator_page():
-    """MIB表OID生成器页面"""
+    """MIB table OID generator page"""
     lang = session.get('language', request.args.get('lang', 'zh'))
     return render_template('mib_oid_generator.html', lang=lang)
 
 @main_bp.route('/set-language')
 def set_language():
-    """设置语言偏好"""
+    """Set language preference"""
     lang = request.args.get('lang')
     if lang in ['zh', 'en']:
         session['language'] = lang
-        logger.info(f"语言已设置为: {lang}")
-    # 重定向到之前的页面或首页
+        logger.info(f"Language set to: {lang}")
+    # Redirect to previous page or homepage
     return redirect(request.referrer or url_for('main.index'))
 
 @main_bp.route('/upload-mib', methods=['POST'])
 def upload_mib():
-    """处理 MIB 文件上传和解析"""
+    """Handle MIB file upload and parsing"""
     try:
-        # 检查是单文件还是多文件上传
+        # Check if single file or multi-file upload
         if 'mib_file' in request.files:
-            # 单文件上传（向后兼容）
+            # Single file upload (backward compatibility)
             file = request.files['mib_file']
             if file.filename == '':
-                return jsonify({'success': False, 'error': '没有选择文件'})
+                return jsonify({'success': False, 'error': 'No file selected'})
             
             if file.filename.lower().endswith('.zip'):
-                # 处理 ZIP 文件
+                # Handle ZIP file
                 files_data, error = validate_and_process_files(file)
                 if error:
                     return jsonify({'success': False, 'error': error})
                 
-                # 解析 ZIP 中的所有 MIB 文件
+                # Parse all MIB files in ZIP
                 result = mib_parser().parse_multiple_mib_files(files_data['files'])
                 if result['success']:
                     result['zip_info'] = {
@@ -69,34 +69,34 @@ def upload_mib():
                     }
                 return result
             else:
-                # 处理单个 MIB 文件
+                # Handle single MIB file
                 file_path = save_uploaded_file(file)
                 
-                # 解析 MIB 文件
+                # Parse MIB file
                 result = mib_parser().parse_mib_file(file_path)
                 
-                # 清理临时文件
+                # Clean up temporary file
                 cleanup_file(file_path)
                 
                 return jsonify(result)
         
         elif 'mib_files' in request.files:
-            # 多文件上传
+            # Multi-file upload
             files = request.files.getlist('mib_files')
             
             files_data, error = validate_and_process_files(files)
             if error:
                 return jsonify({'success': False, 'error': error})
             
-            # 解析所有 MIB 文件
+            # Parse all MIB files
             result = mib_parser().parse_multiple_mib_files(files_data['files'])
             if result['success'] and files_data['zip_info']:
                 result['zip_info'] = files_data['zip_info']
             return result
         
         else:
-            return jsonify({'success': False, 'error': '没有选择文件'})
+            return jsonify({'success': False, 'error': 'No file selected'})
             
     except Exception as e:
-        logger.error(f"处理文件时出错: {str(e)}")
+        logger.error(f"Error processing file: {str(e)}")
         return jsonify({'success': False, 'error': str(e)})

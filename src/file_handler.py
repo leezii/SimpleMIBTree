@@ -9,7 +9,7 @@ from flask import current_app
 logger = logging.getLogger(__name__)
 
 def allowed_file(filename):
-    """检查文件扩展名是否被允许"""
+    """Check if file extension is allowed"""
     return '.' in filename and \
            filename.rsplit('.', 1)[1].lower() in current_app.config['ALLOWED_EXTENSIONS']
 

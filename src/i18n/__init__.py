@@ -7,25 +7,25 @@ logger = logging.getLogger(__name__)
 
 def get_locale():
     """获取用户语言偏好"""
-    # 1. 检查URL参数中的语言设置
+    # 1. Check language setting in URL parameters
     lang = request.args.get('lang')
     if lang in ['zh', 'en']:
-        logger.info(f"从URL参数设置语言: {lang}")
-        session['language'] = lang  # 保存到session
-        session.permanent = True  # 使session持久化
+        logger.info(f"Language set from URL parameter: {lang}")
+        session['language'] = lang  # Save to session
+        session.permanent = True  # Make session persistent
         return lang
     
-    # 2. 检查session中的语言设置
+    # 2. Check language setting in session
     if 'language' in session:
         session_lang = session['language']
-        logger.info(f"从session获取语言: {session_lang}")
+        logger.info(f"Language retrieved from session: {session_lang}")
         return session_lang
     
-    # 3. 检查浏览器语言设置
+    # 3. Check browser language setting
     browser_lang = request.accept_languages.best_match(['zh', 'en']) or 'zh'
-    logger.info(f"使用浏览器语言: {browser_lang}")
-    session['language'] = browser_lang  # 保存到session
-    session.permanent = True  # 使session持久化
+    logger.info(f"Using browser language: {browser_lang}")
+    session['language'] = browser_lang  # Save to session
+    session.permanent = True  # Make session persistent
     return browser_lang
 
 def init_babel(app):

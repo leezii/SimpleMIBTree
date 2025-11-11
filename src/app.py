@@ -1,4 +1,4 @@
-"""Flask 应用主文件"""
+"""Flask application main file"""
 import os
 import logging
 from flask import Flask

@@ -6,7 +6,7 @@ from flask import current_app
 logger = logging.getLogger(__name__)
 
 class MIBParser:
-    """MIB 文件解析器"""
+    """MIB file parser"""
     
     def __init__(self):
         # 延迟加载配置，避免在模块级别访问 current_app
