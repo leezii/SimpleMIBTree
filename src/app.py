@@ -7,36 +7,36 @@ from routes import main_bp
 from i18n import init_babel
 
 def create_app(config_name=None):
-    """应用工厂函数"""
+    """Application factory function"""
     if config_name is None:
         config_name = os.environ.get('FLASK_ENV', 'default')
     
     app = Flask(__name__, 
                 template_folder=config[config_name].TEMPLATES_FOLDER)
     
-    # 加载配置
+    # Load configuration
     app.config.from_object(config[config_name])
     
-    # 确保上传目录存在
+    # Ensure upload directory exists
     os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
     
-    # 初始化国际化支持
+    # Initialize internationalization support
     init_babel(app)
     
-    # 配置日志
+    # Configure logging
     logging.basicConfig(
         level=logging.DEBUG if app.debug else logging.INFO,
         format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
     )
     logger = logging.getLogger(__name__)
-    logger.info(f"Flask 应用已启动，环境: {config_name}")
+    logger.info(f"Flask application started, environment: {config_name}")
     
-    # 注册蓝图
+    # Register blueprint
     app.register_blueprint(main_bp)
     
     return app
 
-# 创建应用实例
+# Create application instance
 app = create_app()
 
 if __name__ == '__main__':

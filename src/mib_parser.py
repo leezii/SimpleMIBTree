@@ -1,4 +1,4 @@
-"""MIB 文件解析模块"""
+"""MIB file parsing module"""
 import os
 import logging
 from flask import current_app
@@ -9,7 +9,7 @@ class MIBParser:
     """MIB file parser"""
     
     def __init__(self):
-        # 延迟加载配置，避免在模块级别访问 current_app
+        # Lazy load configuration to avoid accessing current_app at module level
         self._standard_oid_map = None
     
     @property

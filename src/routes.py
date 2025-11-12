@@ -12,25 +12,25 @@ main_bp = Blueprint('main', __name__)
 @main_bp.route('/')
 def index():
     """Navigation page (homepage)"""
-    lang = session.get('language', request.args.get('lang', 'zh'))
+    lang = session.get('language', request.args.get('lang', 'en'))
     return render_template('index.html', lang=lang)
 
 @main_bp.route('/mib-parser')
 def mib_parser_page():
     """MIB parser page"""
-    lang = session.get('language', request.args.get('lang', 'zh'))
+    lang = session.get('language', request.args.get('lang', 'en'))
     return render_template('mib_parser.html', lang=lang)
 
 @main_bp.route('/oid-calculator')
 def oid_calculator_page():
     """SNMP command generator page"""
-    lang = session.get('language', request.args.get('lang', 'zh'))
+    lang = session.get('language', request.args.get('lang', 'en'))
     return render_template('oid_calculator.html', lang=lang)
 
 @main_bp.route('/mib-oid-generator')
 def mib_oid_generator_page():
     """MIB table OID generator page"""
-    lang = session.get('language', request.args.get('lang', 'zh'))
+    lang = session.get('language', request.args.get('lang', 'en'))
     return render_template('mib_oid_generator.html', lang=lang)
 
 @main_bp.route('/set-language')

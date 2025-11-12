@@ -1,4 +1,4 @@
-"""国际化支持模块"""
+"""Internationalization support module"""
 from flask_babel import Babel
 from flask import request, session
 import logging
@@ -6,7 +6,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 def get_locale():
-    """获取用户语言偏好"""
+    """Get user language preference"""
     # 1. Check language setting in URL parameters
     lang = request.args.get('lang')
     if lang in ['zh', 'en']:
@@ -22,25 +22,25 @@ def get_locale():
         return session_lang
     
     # 3. Check browser language setting
-    browser_lang = request.accept_languages.best_match(['zh', 'en']) or 'zh'
+    browser_lang = request.accept_languages.best_match(['en', 'zh']) or 'en'
     logger.info(f"Using browser language: {browser_lang}")
     session['language'] = browser_lang  # Save to session
     session.permanent = True  # Make session persistent
     return browser_lang
 
 def init_babel(app):
-    """初始化Babel国际化支持"""
-    # Flask-Babel 3.x 使用新的方式设置语言选择器
-    # 通过 init_app 的 locale_selector 参数设置
+    """Initialize Babel internationalization support"""
+    # Flask-Babel 3.x uses new way to set locale selector
+    # Set through locale_selector parameter of init_app
     babel = Babel()
     
-    # 初始化应用并设置语言选择器
+    # Initialize application and set locale selector
     babel.init_app(
         app,
-        default_locale='zh',
+        default_locale='en',
         default_translation_directories='locales',
         locale_selector=get_locale
     )
     
-    logger.info("Babel已初始化")
+    logger.info("Babel initialized")
     return babel

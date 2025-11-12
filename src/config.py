@@ -1,7 +1,7 @@
-"""Flask 应用配置"""
+"""Flask application configuration"""
 import os
 
-# 获取项目根目录
+# Get project root directory
 project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 class Config:
@@ -12,9 +12,9 @@ class Config:
     TEMPLATES_FOLDER = os.path.join(project_root, 'templates')
     
     # Babel configuration
-    LANGUAGES = ['zh', 'en']
+    LANGUAGES = ['en', 'zh']
     BABEL_TRANSLATION_DIRECTORIES = os.path.join(project_root, 'locales')
-    BABEL_DEFAULT_LOCALE = 'zh'
+    BABEL_DEFAULT_LOCALE = 'en'
     BABEL_DEFAULT_TIMEZONE = 'UTC'
     
     # Allowed file extensions
@@ -37,14 +37,14 @@ class Config:
     }
 
 class DevelopmentConfig(Config):
-    """开发环境配置"""
+    """Development environment configuration"""
     DEBUG = True
 
 class ProductionConfig(Config):
-    """生产环境配置"""
+    """Production environment configuration"""
     DEBUG = False
 
-# 配置字典
+# Configuration dictionary
 config = {
     'development': DevelopmentConfig,
     'production': ProductionConfig,
