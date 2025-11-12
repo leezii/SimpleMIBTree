@@ -716,89 +716,151 @@ class MIBParser:
             clean_name = obj['text'].replace('Module: ', '')
             obj_dict[clean_name] = obj
         
-        # 第一步：找到清晰的父子关系
+        # 第一步：基于 OID 路径构建精确的父子关系
         for obj in raw_objects:
             if obj['type'] == 'module':
                 continue  # 模块单独处理
                 
-            oid_path = obj.get('oid_path', [])
-            if oid_path:
-                # 尝试找到最直接的父对象（路径中的最后一个）
-                for potential_parent_name in reversed(oid_path):
-                    if potential_parent_name in obj_dict:
-                        parent_obj = obj_dict[potential_parent_name]
+            oid_str = obj.get('oid', '')
+            if oid_str and oid_str != 'N/A':
+                # 解析 OID 字符串，如 "{ sampleSystemInfo 1 }"
+                clean_oid = oid_str.strip('{ }')
+                parts = clean_oid.split()
+                
+                if len(parts) >= 2:
+                    parent_name = parts[0]
+                    child_id = parts[-1]
+                    
+                    # 查找父对象
+                    if parent_name in obj_dict:
+                        parent_obj = obj_dict[parent_name]
                         if parent_obj != obj and obj not in used_objects:
                             parent_obj['children'].append(obj)
                             used_objects.append(obj)
+                            continue
+        
+        # 第二步：基于数字 OID 构建层次结构（备用方案）
+        for obj in raw_objects:
+            if obj['type'] == 'module' or obj in used_objects:
+                continue
+                
+            numeric_oid = obj.get('numeric_oid', '')
+            if numeric_oid and numeric_oid != 'N/A':
+                # 查找父对象（数字 OID 少一个节点的对象）
+                oid_parts = numeric_oid.split('.')
+                if len(oid_parts) > 1:
+                    parent_numeric_oid = '.'.join(oid_parts[:-1])
+                    
+                    # 查找具有此父数字 OID 的对象
+                    for potential_parent in raw_objects:
+                        if (potential_parent != obj and 
+                            potential_parent.get('numeric_oid') == parent_numeric_oid and
+                            obj not in used_objects):
+                            potential_parent['children'].append(obj)
+                            used_objects.append(obj)
                             break
         
-        # 第二步：将没有父的对象添加到根级别
+        # 第三步：将没有父的对象添加到根级别
         for obj in raw_objects:
             if obj not in used_objects:
                 root_objects.append(obj)
         
-        # 第三步：根据命名约定进一步优化层次结构
+        # 第四步：根据命名约定进一步优化层次结构
         root_objects = self.organize_by_naming_convention(root_objects)
         
         return root_objects if root_objects else raw_objects
     
     def organize_by_naming_convention(self, objects):
         """根据命名约定进一步组织层次结构"""
-        # 对于示例 MIB，我们可以根据命名模式进行组织
         organized = []
         
         # 查找模块对象
         modules = [obj for obj in objects if obj['type'] == 'module']
         
-        # 查找根级别对象（名称中没有点的对象）
-        root_level = [obj for obj in objects if obj['type'] != 'module' and 
-                      ('sampleObjects' in obj['text'] or 'sampleNotifications' in obj['text'])]
-        
-        # 查找系统信息组
-        system_group = [obj for obj in objects if 'sampleSystemInfo' in obj['text']]
-        
-        # 查找系统对象
-        system_objects = [obj for obj in objects if obj['text'].startswith('sampleSystem') and 
-                          obj['text'] not in ['sampleSystemInfo']]
-        
-        # 查找配置表相关对象
-        config_objects = [obj for obj in objects if 'sampleConfig' in obj['text']]
-        
-        # 组织结构
-        for module in modules:
-            organized.append(module)
-            
-            # 为模块添加子节点
-            for root_obj in root_level:
-                if root_obj['text'] == 'sampleObjects':
-                    # 将子组添加到 sampleObjects
-                    for sys_group in system_group:
-                        if sys_group not in root_obj['children']:
-                            # 将系统对象添加到 sampleSystemInfo
-                            for sys_obj in system_objects:
-                                if sys_obj not in sys_group['children']:
-                                    sys_group['children'].append(sys_obj)
-                            root_obj['children'].append(sys_group)
-                    
-                    # 添加配置表
-                    config_table = next((obj for obj in config_objects if obj['text'] == 'sampleConfigTable'), None)
-                    if config_table and config_table not in root_obj['children']:
-                        # 将子对象添加到配置表
-                        config_entry = next((obj for obj in config_objects if obj['text'] == 'sampleConfigEntry'), None)
-                        if config_entry:
-                            config_entry_items = [obj for obj in config_objects if 
-                                                obj['text'].startswith('sampleConfig') and 
-                                                obj['text'] not in ['sampleConfigTable', 'sampleConfigEntry']]
-                            for item in config_entry_items:
-                                if item not in config_entry['children']:
-                                    config_entry['children'].append(item)
-                            if config_entry not in config_table['children']:
-                                config_table['children'].append(config_entry)
-                        root_obj['children'].append(config_table)
+        # 如果有模块，按模块组织
+        if modules:
+            for module in modules:
+                organized.append(module)
+                
+                # 查找属于此模块的根级别对象
+                module_root_objects = []
+                module_other_objects = []
+                
+                for obj in objects:
+                    if obj['type'] != 'module' and obj not in organized:
+                        # 检查是否为根级别对象（通常是 OBJECT IDENTIFIER 类型）
+                        if obj['type'] == 'identifier':
+                            module_root_objects.append(obj)
+                        else:
+                            module_other_objects.append(obj)
+                
+                # 为根级别对象组织子节点
+                for root_obj in module_root_objects:
+                    if root_obj not in module['children']:
+                        # 查找以此根对象为父的对象
+                        root_obj_name = root_obj['text']
+                        children = []
                         
-                module['children'].append(root_obj)
+                        for other_obj in module_other_objects:
+                            if other_obj not in module['children']:
+                                oid_str = other_obj.get('oid', '')
+                                if oid_str and oid_str != 'N/A':
+                                    # 检查 OID 是否以根对象名开头
+                                    clean_oid = oid_str.strip('{ }')
+                                    parts = clean_oid.split()
+                                    if len(parts) >= 2 and parts[0] == root_obj_name:
+                                        children.append(other_obj)
+                        
+                        # 将子对象添加到根对象
+                        for child in children:
+                            if child not in root_obj['children']:
+                                root_obj['children'].append(child)
+                        
+                        # 将根对象添加到模块
+                        if root_obj not in module['children']:
+                            module['children'].append(root_obj)
+                
+                # 添加未分类的对象到模块
+                for obj in module_other_objects:
+                    if (obj['type'] != 'module' and 
+                        obj not in module['children'] and 
+                        obj not in organized):
+                        module['children'].append(obj)
         
-        # 如果没有模块，直接返回所有对象
+        else:
+            # 没有模块，尝试按命名约定组织
+            # 查找根级别标识符
+            root_identifiers = [obj for obj in objects if obj['type'] == 'identifier']
+            other_objects = [obj for obj in objects if obj['type'] != 'identifier' and obj['type'] != 'module']
+            
+            if root_identifiers:
+                for root_obj in root_identifiers:
+                    organized.append(root_obj)
+                    
+                    # 查找以此根对象为父的对象
+                    root_obj_name = root_obj['text']
+                    children = []
+                    
+                    for other_obj in other_objects:
+                        if other_obj not in organized:
+                            oid_str = other_obj.get('oid', '')
+                            if oid_str and oid_str != 'N/A':
+                                clean_oid = oid_str.strip('{ }')
+                                parts = clean_oid.split()
+                                if len(parts) >= 2 and parts[0] == root_obj_name:
+                                    children.append(other_obj)
+                    
+                    # 将子对象添加到根对象
+                    for child in children:
+                        if child not in root_obj['children']:
+                            root_obj['children'].append(child)
+                            organized.append(child)
+            
+            # 添加剩余的对象
+            for obj in other_objects:
+                if obj not in organized:
+                    organized.append(obj)
+        
         return organized if organized else objects
 
 # 创建全局解析器实例的函数
