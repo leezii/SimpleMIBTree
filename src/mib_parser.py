@@ -620,26 +620,7 @@ class MIBParser:
         for obj in unique_objects.values():
             obj_name = obj['text']
             numeric_oid = obj.get('numeric_oid', '')
-            
-            # 跳过不相关的节点，专注于实际的 MIB 对象
-            # 1. 跳过 mib-2 根节点本身，避免重复
-            if obj_name == 'mib-2' and numeric_oid == '1.3.6.1.2.1':
-                continue
-            
-            # 2. 跳过 MODULE-IDENTITY 节点（模块元信息）
-            if obj_name == 'MODULE-IDENTITY' or (obj_name.startswith('Module:') and obj['type'] == 'object'):
-                continue
-            
-            # 3. 跳过 snmpMIBConformance 相关节点（SNMP 特定的合规性信息）
-            if 'snmpMIBConformance' in obj_name or 'snmpMIBCompliances' in obj_name or 'snmpMIBGroups' in obj_name:
-                continue
-            
-            # 4. 跳过不属于 MIB-II 层次结构的节点
-            if numeric_oid and numeric_oid != 'N/A':
-                # 跳过 SNMP 模块相关的节点 (1.3.6.1.6.3.x)
-                if numeric_oid.startswith('1.3.6.1.6.3.'):
-                    continue
-            
+
             # 根据数字 OID 分类
             categorized = False
             
