@@ -402,8 +402,22 @@ class MIBParser:
         if not mib_objects:
             return []
         
-        # 按数字 OID 排序
-        sorted_objects = sorted(mib_objects, key=lambda x: self.get_oid_depth(x.get('numeric_oid', '')))
+        # 按数字 OID 排序（先按深度排序，同深度按数值排序）
+        def sort_key(obj):
+            numeric_oid = obj.get('numeric_oid', '')
+            if not numeric_oid or numeric_oid == 'N/A':
+                return (999, '')  # 无效 OID 排在最后
+            
+            try:
+                parts = numeric_oid.split('.')
+                depth = len(parts)
+                # 将数字部分转换为整数进行正确排序
+                numeric_parts = [int(part) for part in parts]
+                return (depth, numeric_parts)
+            except:
+                return (999, '')
+        
+        sorted_objects = sorted(mib_objects, key=sort_key)
         
         # 创建 OID 到对象的映射
         oid_to_obj = {}
@@ -432,12 +446,17 @@ class MIBParser:
             if parent_oid and parent_oid in oid_to_obj:
                 parent_obj = oid_to_obj[parent_oid]
                 if obj not in parent_obj['children']:
+                    # 对子节点也进行排序
                     parent_obj['children'].append(obj)
+                    parent_obj['children'].sort(key=sort_key)
                     used_objects.append(obj)
             elif not parent_oid or parent_oid not in oid_to_obj:
                 # 没有找到父对象，作为根节点
                 root_objects.append(obj)
                 used_objects.append(obj)
+        
+        # 对根节点也进行排序
+        root_objects.sort(key=sort_key)
         
         return root_objects
     
@@ -467,6 +486,44 @@ class MIBParser:
     
     def build_mib2_hierarchy(self, all_objects):
         """构建正确的 MIB-2 层次结构"""
+        # 定义排序函数
+        def sort_key(obj):
+            numeric_oid = obj.get('numeric_oid', '')
+            if not numeric_oid or numeric_oid == 'N/A':
+                return (999, '')  # 无效 OID 排在最后
+            
+            try:
+                parts = numeric_oid.split('.')
+                depth = len(parts)
+                # 将数字部分转换为整数进行正确排序
+                numeric_parts = [int(part) for part in parts]
+                return (depth, numeric_parts)
+            except:
+                return (999, '')
+        
+        # 去重：按 numeric_oid 合并重复对象
+        unique_objects = {}
+        for obj in all_objects:
+            if obj['type'] == 'module':
+                continue
+            
+            numeric_oid = obj.get('numeric_oid', '')
+            if numeric_oid and numeric_oid != 'N/A':
+                if numeric_oid not in unique_objects:
+                    unique_objects[numeric_oid] = obj
+                else:
+                    # 如果有重复，保留信息更完整的对象
+                    existing = unique_objects[numeric_oid]
+                    # 优先保留有更完整信息的对象
+                    if (obj.get('access') != 'N/A' and existing.get('access') == 'N/A') or \
+                       (obj.get('status') == 'current' and existing.get('status') != 'current'):
+                        unique_objects[numeric_oid] = obj
+            else:
+                # 对于没有 numeric_oid 的对象，使用 text 作为键
+                text_key = obj['text']
+                if text_key not in unique_objects:
+                    unique_objects[text_key] = obj
+        
         # 创建 mib-2 根节点
         mib2_node = {
             'text': 'mib-2',
@@ -476,13 +533,27 @@ class MIBParser:
             'children': []
         }
         
-        # 创建标准 mib-2 子节点
+        # 创建标准 mib-2 子节点，包括 system 节点
         standard_nodes = {
+            'system': {
+                'text': 'system',
+                'type': 'group',
+                'oid': '1.3.6.1.2.1.1',
+                'numeric_oid': '1.3.6.1.2.1.1',
+                'children': []
+            },
             'interfaces': {
                 'text': 'interfaces',
                 'type': 'group',
                 'oid': '1.3.6.1.2.1.2',
                 'numeric_oid': '1.3.6.1.2.1.2',
+                'children': []
+            },
+            'at': {
+                'text': 'at',
+                'type': 'group',
+                'oid': '1.3.6.1.2.1.3',
+                'numeric_oid': '1.3.6.1.2.1.3',
                 'children': []
             },
             'ip': {
@@ -513,6 +584,20 @@ class MIBParser:
                 'numeric_oid': '1.3.6.1.2.1.7',
                 'children': []
             },
+            'egp': {
+                'text': 'egp',
+                'type': 'group',
+                'oid': '1.3.6.1.2.1.8',
+                'numeric_oid': '1.3.6.1.2.1.8',
+                'children': []
+            },
+            'transmission': {
+                'text': 'transmission',
+                'type': 'group',
+                'oid': '1.3.6.1.2.1.10',
+                'numeric_oid': '1.3.6.1.2.1.10',
+                'children': []
+            },
             'snmp': {
                 'text': 'snmp',
                 'type': 'group',
@@ -522,26 +607,58 @@ class MIBParser:
             }
         }
         
-        # 添加标准节点到 mib-2
-        for node_name, node_obj in standard_nodes.items():
+        # 按数字 OID 排序标准节点
+        sorted_standard_nodes = sorted(standard_nodes.items(), key=lambda x: sort_key(x[1]))
+        
+        # 添加排序后的标准节点到 mib-2
+        for node_name, node_obj in sorted_standard_nodes:
             mib2_node['children'].append(node_obj)
         
         # 根据它们的 OID 或命名模式对对象进行分类
         uncategorized_objects = []
         
-        for obj in all_objects:
-            if obj['type'] == 'module':
-                continue  # 暂时跳过模块对象
-            
+        for obj in unique_objects.values():
             obj_name = obj['text']
             numeric_oid = obj.get('numeric_oid', '')
+            
+            # 跳过不相关的节点，专注于实际的 MIB 对象
+            # 1. 跳过 mib-2 根节点本身，避免重复
+            if obj_name == 'mib-2' and numeric_oid == '1.3.6.1.2.1':
+                continue
+            
+            # 2. 跳过 MODULE-IDENTITY 节点（模块元信息）
+            if obj_name == 'MODULE-IDENTITY' or (obj_name.startswith('Module:') and obj['type'] == 'object'):
+                continue
+            
+            # 3. 跳过 snmpMIBConformance 相关节点（SNMP 特定的合规性信息）
+            if 'snmpMIBConformance' in obj_name or 'snmpMIBCompliances' in obj_name or 'snmpMIBGroups' in obj_name:
+                continue
+            
+            # 4. 跳过不属于 MIB-II 层次结构的节点
+            if numeric_oid and numeric_oid != 'N/A':
+                # 跳过 SNMP 模块相关的节点 (1.3.6.1.6.3.x)
+                if numeric_oid.startswith('1.3.6.1.6.3.'):
+                    continue
             
             # 根据数字 OID 分类
             categorized = False
             
             if numeric_oid and numeric_oid != 'N/A':
-                if numeric_oid.startswith('1.3.6.1.2.1.2'):  # interfaces
+                if numeric_oid.startswith('1.3.6.1.2.1.1'):  # system
+                    # 检查是否是 system 节点本身
+                    if numeric_oid == '1.3.6.1.2.1.1':
+                        # 这是 system 节点本身，不添加到子节点
+                        continue
+                    else:
+                        # 这是 system 的子节点（必须是 1.3.6.1.2.1.1.x 格式）
+                        if numeric_oid.startswith('1.3.6.1.2.1.1.') and len(numeric_oid.split('.')) > 7:
+                            standard_nodes['system']['children'].append(obj)
+                            categorized = True
+                elif numeric_oid.startswith('1.3.6.1.2.1.2'):  # interfaces
                     standard_nodes['interfaces']['children'].append(obj)
+                    categorized = True
+                elif numeric_oid.startswith('1.3.6.1.2.1.3'):  # at
+                    standard_nodes['at']['children'].append(obj)
                     categorized = True
                 elif numeric_oid.startswith('1.3.6.1.2.1.4'):  # ip
                     standard_nodes['ip']['children'].append(obj)
@@ -555,6 +672,12 @@ class MIBParser:
                 elif numeric_oid.startswith('1.3.6.1.2.1.7'):  # udp
                     standard_nodes['udp']['children'].append(obj)
                     categorized = True
+                elif numeric_oid.startswith('1.3.6.1.2.1.8'):  # egp
+                    standard_nodes['egp']['children'].append(obj)
+                    categorized = True
+                elif numeric_oid.startswith('1.3.6.1.2.1.10'):  # transmission
+                    standard_nodes['transmission']['children'].append(obj)
+                    categorized = True
                 elif numeric_oid.startswith('1.3.6.1.2.1.11'): # snmp
                     standard_nodes['snmp']['children'].append(obj)
                     categorized = True
@@ -562,7 +685,14 @@ class MIBParser:
             # 如果没有按 OID 分类，尝试命名模式
             if not categorized:
                 obj_name_lower = obj_name.lower()
-                if any(keyword in obj_name_lower for keyword in ['if', 'interface']):
+                if obj_name_lower == 'system':
+                    # 这是 system 节点本身，不添加到子节点
+                    continue
+                elif any(keyword in obj_name_lower for keyword in ['sys', 'system']) and 'desc' not in obj_name_lower:
+                    # system 相关的对象（但不包括 sysDescr 等，这些应该通过 OID 分类）
+                    standard_nodes['system']['children'].append(obj)
+                    categorized = True
+                elif any(keyword in obj_name_lower for keyword in ['if', 'interface']):
                     standard_nodes['interfaces']['children'].append(obj)
                     categorized = True
                 elif any(keyword in obj_name_lower for keyword in ['ip', 'address']):
@@ -577,6 +707,12 @@ class MIBParser:
                 elif 'udp' in obj_name_lower:
                     standard_nodes['udp']['children'].append(obj)
                     categorized = True
+                elif 'egp' in obj_name_lower:
+                    standard_nodes['egp']['children'].append(obj)
+                    categorized = True
+                elif 'transmission' in obj_name_lower:
+                    standard_nodes['transmission']['children'].append(obj)
+                    categorized = True
                 elif any(keyword in obj_name_lower for keyword in ['snmp', 'trap']):
                     standard_nodes['snmp']['children'].append(obj)
                     categorized = True
@@ -584,9 +720,19 @@ class MIBParser:
             if not categorized:
                 uncategorized_objects.append(obj)
         
-        # 将未分类的对象添加到 mib-2 根节点
-        for obj in uncategorized_objects:
-            mib2_node['children'].append(obj)
+        # 对每个标准节点的子节点进行排序
+        for node_name, node_obj in standard_nodes.items():
+            if node_obj['children']:
+                node_obj['children'].sort(key=sort_key)
+        
+        # 将未分类的对象添加到 mib-2 根节点并排序
+        if uncategorized_objects:
+            uncategorized_objects.sort(key=sort_key)
+            for obj in uncategorized_objects:
+                mib2_node['children'].append(obj)
+        
+        # 对 mib-2 的直接子节点进行排序
+        mib2_node['children'].sort(key=sort_key)
         
         # 创建最终的树结构
         root_node = {

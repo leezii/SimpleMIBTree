@@ -58,12 +58,20 @@ def extract_zip_file(zip_file):
 
 def validate_and_process_files(files):
     """Validate and process uploaded files"""
-    if not files or (hasattr(files, '__iter__') and len(files) > 0 and files[0].filename == ''):
+    if not files:
         return None, 'No file selected'
     
     # Handle single file (backward compatibility)
     if hasattr(files, 'filename'):
+        if files.filename == '':
+            return None, 'No file selected'
         files = [files]
+    elif hasattr(files, '__iter__'):
+        # Handle multiple files
+        files_list = list(files)
+        if len(files_list) == 0 or (len(files_list) > 0 and files_list[0].filename == ''):
+            return None, 'No file selected'
+        files = files_list
     
     valid_files = []
     invalid_files = []
