@@ -160,14 +160,39 @@ The application will start at http://localhost:5000
 
 ## Example Files
 
-The project includes an example MIB file `sample_mibs/SAMPLE-MIB.mib` which you can use to test parsing functionality.
+The project includes example MIB files in `test_data/sample_mibs/` which you can use to test parsing functionality.
 
 ## Testing
 
-Run test scripts:
+### Unified Test Framework
+
+The project includes a comprehensive unified test framework that covers all functionality:
+
 ```bash
-python test_mib_parser.py
+# Run tests using the convenience script
+cd tests && ./run_tests.sh
+
+# Or run manually
+source venv/bin/activate
+cd tests && python test_mib_unified.py
 ```
+
+### Test Coverage
+
+The unified test framework includes 13 test cases covering:
+
+- **Core Functionality**: Single/multi-file parsing, MIB-II standard support
+- **Web API**: Single/multi-file upload, ZIP file upload
+- **Feature Validation**: Cross-file dependencies, OID calculation accuracy
+- **Performance**: Parsing speed and efficiency analysis
+- **Error Handling**: File not found, empty files, format errors
+- **Tree Structure**: Hierarchy validation and structure integrity
+
+### Test Reports
+
+After testing completes, detailed JSON reports are generated:
+- `tests/mib_unified_test_report.json` - Latest test results
+- Includes test environment, success rates, detailed results, and performance data
 
 ## Project Structure
 
@@ -190,13 +215,18 @@ flask_web/
 │       └── LC_MESSAGES/
 │           ├── messages.po # Translation source file
 │           └── messages.mo # Compiled translation file
-├── tests/                 # Test files
-│   ├── test_mib_parser.py # MIB parser test
-│   ├── test_multi_mib.py  # Multi-file upload test
-│   └── test_zip_upload.py # ZIP file upload test
+├── tests/                 # Unified test framework
+│   ├── README.md          # Test documentation
+│   ├── test_mib_unified.py # Unified test framework
+│   ├── run_tests.sh      # Convenience test runner
+│   ├── mib_unified_test_report.json # Latest test report
+│   ├── mib_comprehensive_test_report.json # Previous test report
+│   ├── mib_test_report.json # Moved test report
+│   └── 多MIB文件解析测试报告.md # Chinese test report
 ├── test_data/            # Test data
 │   ├── sample_mibs/      # Example MIB files
-│   └── test_mibs.zip    # Test ZIP package
+│   ├── mib2_files/      # MIB-II standard files
+│   └── *.zip           # Test ZIP packages
 ├── examples/             # Examples
 │   └── browser_test.html # Browser test page
 ├── templates/            # Template files

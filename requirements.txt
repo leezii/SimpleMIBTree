@@ -1,5 +1,5 @@
 Flask==2.3.3
-pysmi==1.1.13
+pysmi==1.4.4
 pysnmp==4.4.12
 Werkzeug==2.3.7
 gunicorn==21.2.0

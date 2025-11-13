@@ -391,8 +391,79 @@ class MIBParser:
             if has_mib2_objects:
                 return self.build_mib2_hierarchy(mib_objects)
         
-        # 对于非 MIB-II 文件，回退到原始逻辑
-        return self.organize_by_modules_fallback(raw_objects)
+        # 对于非 MIB-II 文件，使用基于 OID 深度的层次结构
+        return self.build_oid_based_hierarchy(raw_objects)
+    
+    def build_oid_based_hierarchy(self, raw_objects):
+        """基于 OID 深度构建层次结构"""
+        # 过滤掉模块对象
+        mib_objects = [obj for obj in raw_objects if obj['type'] != 'module']
+        
+        if not mib_objects:
+            return []
+        
+        # 按数字 OID 排序
+        sorted_objects = sorted(mib_objects, key=lambda x: self.get_oid_depth(x.get('numeric_oid', '')))
+        
+        # 创建 OID 到对象的映射
+        oid_to_obj = {}
+        for obj in sorted_objects:
+            numeric_oid = obj.get('numeric_oid', '')
+            if numeric_oid and numeric_oid != 'N/A':
+                oid_to_obj[numeric_oid] = obj
+        
+        # 构建层次结构
+        root_objects = []
+        used_objects = []
+        
+        for obj in sorted_objects:
+            if obj in used_objects:
+                continue
+                
+            numeric_oid = obj.get('numeric_oid', '')
+            if not numeric_oid or numeric_oid == 'N/A':
+                # 没有 OID 的对象作为根节点
+                root_objects.append(obj)
+                used_objects.append(obj)
+                continue
+            
+            # 查找父对象
+            parent_oid = self.get_parent_oid(numeric_oid)
+            if parent_oid and parent_oid in oid_to_obj:
+                parent_obj = oid_to_obj[parent_oid]
+                if obj not in parent_obj['children']:
+                    parent_obj['children'].append(obj)
+                    used_objects.append(obj)
+            elif not parent_oid or parent_oid not in oid_to_obj:
+                # 没有找到父对象，作为根节点
+                root_objects.append(obj)
+                used_objects.append(obj)
+        
+        return root_objects
+    
+    def get_oid_depth(self, numeric_oid):
+        """获取 OID 深度"""
+        if not numeric_oid or numeric_oid == 'N/A':
+            return 999  # 无效 OID，排在最后
+        
+        try:
+            parts = numeric_oid.split('.')
+            return len(parts)
+        except:
+            return 999
+    
+    def get_parent_oid(self, numeric_oid):
+        """获取父 OID"""
+        if not numeric_oid or numeric_oid == 'N/A':
+            return None
+        
+        try:
+            parts = numeric_oid.split('.')
+            if len(parts) > 1:
+                return '.'.join(parts[:-1])
+            return None
+        except:
+            return None
     
     def build_mib2_hierarchy(self, all_objects):
         """构建正确的 MIB-2 层次结构"""
@@ -849,12 +920,11 @@ class MIBParser:
                                 parts = clean_oid.split()
                                 if len(parts) >= 2 and parts[0] == root_obj_name:
                                     children.append(other_obj)
-                    
+                        
                     # 将子对象添加到根对象
                     for child in children:
                         if child not in root_obj['children']:
                             root_obj['children'].append(child)
-                            organized.append(child)
             
             # 添加剩余的对象
             for obj in other_objects:

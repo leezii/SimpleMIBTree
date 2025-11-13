@@ -1,0 +1,112 @@
+{
+  "timestamp": "posix.times_result(user=0.11, system=0.02, children_user=0.0, children_system=0.0, elapsed=1762953758.67)",
+  "test_environment": {
+    "python_version": "3.14.0 (main, Oct  7 2025, 09:34:52) [Clang 17.0.0 (clang-1700.3.19.1)]",
+    "framework": "Comprehensive MIB Test Suite",
+    "test_date": "2025-11-12 21:22:38"
+  },
+  "summary": {
+    "total_tests": 8,
+    "passed_tests": 7,
+    "failed_tests": 1,
+    "success_rate": 87.5
+  },
+  "detailed_results": {
+    "解析器单文件解析": {
+      "test": "解析器单文件解析",
+      "success": true,
+      "details": "模块: SAMPLE-MIB, 对象数: 14",
+      "data": {
+        "module": "SAMPLE-MIB",
+        "object_count": 14,
+        "key_objects": [
+          "sampleSystemName",
+          "sampleSystemVersion",
+          "sampleConfigTable"
+        ],
+        "valid_oids_count": 14,
+        "sample_oids": [
+          [
+            "sampleObjects",
+            "1.3.6.1.4.1.99999.1"
+          ],
+          [
+            "sampleSystemInfo",
+            "1.3.6.1.4.1.99999.1.1"
+          ],
+          [
+            "sampleSystemName",
+            "1.3.6.1.4.1.99999.1.1.1"
+          ]
+        ]
+      }
+    },
+    "解析器多文件解析": {
+      "test": "解析器多文件解析",
+      "success": true,
+      "details": "模块数: 3, 总对象数: 38",
+      "data": {
+        "modules_count": 3,
+        "total_objects": 38,
+        "modules": [
+          {
+            "name": "SAMPLE-MIB",
+            "filename": "SAMPLE-MIB.mib",
+            "object_count": 14
+          },
+          {
+            "name": "RELATED-MIB",
+            "filename": "RELATED-MIB.mib",
+            "object_count": 10
+          },
+          {
+            "name": "CHILD-MIB",
+            "filename": "CHILD-MIB.mib",
+            "object_count": 14
+          }
+        ],
+        "cross_file_refs": 3,
+        "imported_objects": [
+          "sampleSystemStatus",
+          "relatedSystemStatus",
+          "sampleConfigStatus"
+        ]
+      }
+    },
+    "解析器MIB-II标准支持": {
+      "test": "解析器MIB-II标准支持",
+      "success": false,
+      "details": "在任何文件中都未找到有效的 MIB 对象"
+    },
+    "Web API 单文件上传": {
+      "test": "Web API 单文件上传",
+      "success": true,
+      "details": "模块: SAMPLE-MIB, 对象数: 1"
+    },
+    "Web API 多文件上传": {
+      "test": "Web API 多文件上传",
+      "success": true,
+      "details": "模块数: 2, 总对象数: 24"
+    },
+    "单文件解析性能": {
+      "test": "单文件解析性能",
+      "success": true,
+      "details": "时间: 0.000s, 对象数: 14, 速率: 100034.5 obj/s",
+      "data": {
+        "single_file_time": 0.0001399517059326172,
+        "object_count": 14,
+        "objects_per_second": 100034.50766609881
+      }
+    },
+    "不存在文件错误处理": {
+      "test": "不存在文件错误处理",
+      "success": true,
+      "details": "正确返回错误"
+    },
+    "空文件处理": {
+      "test": "空文件处理",
+      "success": true,
+      "details": "正确处理空文件"
+    }
+  }
+}

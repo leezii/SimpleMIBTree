@@ -127,10 +127,13 @@
             display: flex;
             justify-content: space-between;
             align-items: flex-start;
+            flex-wrap: wrap;
+            gap: 15px;
         }
         
         .results-title {
             flex: 1;
+            min-width: 200px;
         }
         
         .results-title h2 {
@@ -139,7 +142,14 @@
             margin-bottom: 10px;
         }
         
-        .detail-toggle-btn {
+        .control-buttons {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        
+        .detail-toggle-btn, .tree-control-btn {
             background: linear-gradient(135deg, #10b981 0%, #059669 100%);
             color: white;
             border: none;
@@ -155,14 +165,46 @@
             box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
         }
         
-        .detail-toggle-btn:hover {
+        .detail-toggle-btn:hover, .tree-control-btn:hover {
             transform: translateY(-2px);
             box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
         }
         
-        .detail-toggle-btn.hidden {
+        .detail-toggle-btn.hidden, .tree-control-btn.hidden {
             background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%);
             box-shadow: 0 4px 12px rgba(107, 114, 128, 0.3);
+        }
+        
+        .tree-control-btn {
+            background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+        }
+        
+        .tree-control-btn:hover {
+            box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
+        }
+        
+        .tree-stats {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 8px 16px;
+            font-size: 0.9rem;
+            color: #64748b;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .stat-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .stat-value {
+            font-weight: 600;
+            color: #1f2937;
         }
         
         .module-info {
@@ -408,10 +450,30 @@
                 <div class="results-title">
                     <h2>{{ _('解析结果') }}</h2>
                 </div>
-                <button class="detail-toggle-btn" id="detail-toggle-btn" onclick="toggleModuleInfo()">
-                    <span id="detail-icon">📊</span>
-                    <span id="detail-text">{{ _('隐藏详情') }}</span>
-                </button>
+                <div class="control-buttons">
+                    <button class="detail-toggle-btn" id="detail-toggle-btn" onclick="toggleModuleInfo()">
+                        <span id="detail-icon">📊</span>
+                        <span id="detail-text">{{ _('隐藏详情') }}</span>
+                    </button>
+                    <button class="tree-control-btn" id="expand-all-btn" onclick="expandAll()">
+                        <span>📂</span>
+                        <span>{{ _('展开全部') }}</span>
+                    </button>
+                    <button class="tree-control-btn" id="collapse-all-btn" onclick="collapseAll()">
+                        <span>📁</span>
+                        <span>{{ _('折叠全部') }}</span>
+                    </button>
+                    <div class="tree-stats" id="tree-stats">
+                        <div class="stat-item">
+                            <span>{{ _('节点') }}:</span>
+                            <span class="stat-value" id="node-count">0</span>
+                        </div>
+                        <div class="stat-item">
+                            <span>{{ _('已展开') }}:</span>
+                            <span class="stat-value" id="expanded-count">0</span>
+                        </div>
+                    </div>
+                </div>
             </div>
             <div class="module-info" id="module-info"></div>
             <div class="tree-container" id="tree-container">
@@ -594,6 +656,11 @@
                 const nodeElement = createTreeNode(node);
                 treeContainer.appendChild(nodeElement);
             });
+            
+            // 渲染完成后更新统计信息
+            setTimeout(() => {
+                updateTreeStats();
+            }, 100);
         }
 
         function createTreeNode(node) {
@@ -734,25 +801,6 @@
             return nodeDiv;
         }
 
-        function toggleNode(nodeDiv) {
-            const toggle = nodeDiv.querySelector('.tree-toggle');
-            const children = nodeDiv.querySelector('.tree-children');
-            const item = nodeDiv.querySelector('.tree-item');
-            
-            if (children) {
-                const isExpanded = children.classList.contains('expanded');
-                if (isExpanded) {
-                    children.classList.remove('expanded');
-                    item.classList.remove('expanded');
-                    toggle.textContent = '▶';
-                } else {
-                    children.classList.add('expanded');
-                    item.classList.add('expanded');
-                    toggle.textContent = '▼';
-                }
-            }
-        }
-
         function toggleModuleInfo() {
             const moduleInfoDiv = document.getElementById('module-info');
             const toggleBtn = document.getElementById('detail-toggle-btn');
@@ -798,6 +846,88 @@
             hideAlert();
             fileInput.value = '';
         }
+
+        // 新增的树形结构控制功能
+        function expandAll() {
+            const allChildren = document.querySelectorAll('.tree-children');
+            const allToggles = document.querySelectorAll('.tree-toggle');
+            const allItems = document.querySelectorAll('.tree-item');
+            
+            allChildren.forEach(children => {
+                children.classList.add('expanded');
+            });
+            
+            allToggles.forEach(toggle => {
+                if (toggle.style.visibility !== 'hidden') {
+                    toggle.textContent = '▼';
+                }
+            });
+            
+            allItems.forEach(item => {
+                const children = item.parentElement.querySelector('.tree-children');
+                if (children) {
+                    item.classList.add('expanded');
+                }
+            });
+            
+            updateTreeStats();
+        }
+
+        function collapseAll() {
+            const allChildren = document.querySelectorAll('.tree-children');
+            const allToggles = document.querySelectorAll('.tree-toggle');
+            const allItems = document.querySelectorAll('.tree-item');
+            
+            allChildren.forEach(children => {
+                children.classList.remove('expanded');
+            });
+            
+            allToggles.forEach(toggle => {
+                if (toggle.style.visibility !== 'hidden') {
+                    toggle.textContent = '▶';
+                }
+            });
+            
+            allItems.forEach(item => {
+                item.classList.remove('expanded');
+            });
+            
+            updateTreeStats();
+        }
+
+        function updateTreeStats() {
+            const allChildren = document.querySelectorAll('.tree-children');
+            const expandedChildren = document.querySelectorAll('.tree-children.expanded');
+            const allNodes = document.querySelectorAll('.tree-node');
+            
+            document.getElementById('node-count').textContent = allNodes.length;
+            document.getElementById('expanded-count').textContent = expandedChildren.length;
+        }
+
+        function toggleNode(nodeDiv) {
+            const toggle = nodeDiv.querySelector('.tree-toggle');
+            const children = nodeDiv.querySelector('.tree-children');
+            const item = nodeDiv.querySelector('.tree-item');
+            
+            if (children) {
+                const isExpanded = children.classList.contains('expanded');
+                if (isExpanded) {
+                    children.classList.remove('expanded');
+                    item.classList.remove('expanded');
+                    toggle.textContent = '▶';
+                } else {
+                    children.classList.add('expanded');
+                    item.classList.add('expanded');
+                    toggle.textContent = '▼';
+                }
+                
+                // 更新统计信息
+                setTimeout(() => {
+                    updateTreeStats();
+                }, 50);
+            }
+        }
+
     </script>
 </body>
 </html>

@@ -1,0 +1,130 @@
+{
+  "timestamp": "2025-11-13T21:17:43.779498",
+  "test_environment": {
+    "python_version": "3.14.0 (main, Oct  7 2025, 09:34:52) [Clang 17.0.0 (clang-1700.3.19.1)]",
+    "framework": "Unified MIB Test Suite",
+    "test_date": "2025-11-13 21:17:43",
+    "working_directory": "/Users/zhili/Develop/python/flask_web/tests"
+  },
+  "summary": {
+    "total_tests": 13,
+    "passed_tests": 7,
+    "failed_tests": 6,
+    "success_rate": 53.84615384615385
+  },
+  "detailed_results": {
+    "单文件解析 - 示例MIB": {
+      "test": "单文件解析 - 示例MIB",
+      "success": true,
+      "details": "模块: SAMPLE-MIB, 对象数: 14",
+      "timestamp": "2025-11-13T21:17:43.759755",
+      "data": {
+        "module": "SAMPLE-MIB",
+        "object_count": 14,
+        "key_objects": [
+          "sampleSystemName",
+          "sampleSystemVersion",
+          "sampleConfigTable"
+        ],
+        "valid_oids_count": 14,
+        "sample_oids": [
+          [
+            "sampleObjects",
+            "1.3.6.1.4.1.99999.1"
+          ],
+          [
+            "sampleSystemInfo",
+            "1.3.6.1.4.1.99999.1.1"
+          ],
+          [
+            "sampleSystemName",
+            "1.3.6.1.4.1.99999.1.1.1"
+          ]
+        ],
+        "tree_structure_valid": true
+      }
+    },
+    "多文件解析 - 示例MIBs": {
+      "test": "多文件解析 - 示例MIBs",
+      "success": false,
+      "details": "在任何文件中都未找到有效的 MIB 对象",
+      "timestamp": "2025-11-13T21:17:43.760298"
+    },
+    "MIB-II 标准文件解析": {
+      "test": "MIB-II 标准文件解析",
+      "success": false,
+      "details": "在任何文件中都未找到有效的 MIB 对象",
+      "timestamp": "2025-11-13T21:17:43.761533"
+    },
+    "Web API 单文件上传": {
+      "test": "Web API 单文件上传",
+      "success": false,
+      "details": "Flask 应用未运行",
+      "timestamp": "2025-11-13T21:17:43.771608"
+    },
+    "Web API 多文件上传": {
+      "test": "Web API 多文件上传",
+      "success": false,
+      "details": "Flask 应用未运行",
+      "timestamp": "2025-11-13T21:17:43.775253"
+    },
+    "Web API ZIP 文件上传": {
+      "test": "Web API ZIP 文件上传",
+      "success": false,
+      "details": "Flask 应用未运行",
+      "timestamp": "2025-11-13T21:17:43.778575"
+    },
+    "跨文件依赖关系检测": {
+      "test": "跨文件依赖关系检测",
+      "success": true,
+      "details": "检测到导入的 SampleStatus",
+      "timestamp": "2025-11-13T21:17:43.778704"
+    },
+    "OID 计算准确性": {
+      "test": "OID 计算准确性",
+      "success": true,
+      "details": "发现正确的企业 OID",
+      "timestamp": "2025-11-13T21:17:43.778830"
+    },
+    "树形结构验证": {
+      "test": "树形结构验证",
+      "success": true,
+      "details": "树形结构正确，深度: 4",
+      "timestamp": "2025-11-13T21:17:43.778963",
+      "data": {
+        "tree_depth": 4,
+        "total_nodes": 15,
+        "structure_issues": []
+      }
+    },
+    "单文件解析性能": {
+      "test": "单文件解析性能",
+      "success": true,
+      "details": "时间: 0.000s, 对象数: 14, 速率: 133455.1 obj/s",
+      "timestamp": "2025-11-13T21:17:43.779081",
+      "data": {
+        "single_file_time": 0.0001049041748046875,
+        "object_count": 14,
+        "objects_per_second": 133455.12727272726
+      }
+    },
+    "多文件解析性能": {
+      "test": "多文件解析性能",
+      "success": false,
+      "details": "在任何文件中都未找到有效的 MIB 对象",
+      "timestamp": "2025-11-13T21:17:43.779253"
+    },
+    "不存在文件错误处理": {
+      "test": "不存在文件错误处理",
+      "success": true,
+      "details": "正确返回错误",
+      "timestamp": "2025-11-13T21:17:43.779282"
+    },
+    "空文件处理": {
+      "test": "空文件处理",
+      "success": true,
+      "details": "正确处理空文件",
+      "timestamp": "2025-11-13T21:17:43.779485"
+    }
+  }
+}
