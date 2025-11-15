@@ -44,9 +44,15 @@ class ProductionConfig(Config):
     """Production environment configuration"""
     DEBUG = False
 
+class TestingConfig(Config):
+    """Testing environment configuration"""
+    TESTING = True
+    WTF_CSRF_ENABLED = False
+
 # Configuration dictionary
 config = {
     'development': DevelopmentConfig,
     'production': ProductionConfig,
+    'testing': TestingConfig,
     'default': DevelopmentConfig
 }
