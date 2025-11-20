@@ -51,16 +51,34 @@ class MIBParser:
                     # 如果文件名包含路径，只取文件名部分
                     if '/' in filename:
                         filename = os.path.basename(filename)
-                    file_path = os.path.join(current_app.config['UPLOAD_FOLDER'], filename)
-                    file.save(file_path)
-                    saved_files.append(file_path)
                     
-                    # 读取并解析文件内容
-                    with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
-                        mib_content = f.read()
+                    # 直接从文件对象读取内容，不保存到磁盘
+                    # 检查文件对象类型并采用适当的读取方式
+                    if hasattr(file, 'seek'):
+                        # 标准文件对象，可以重置指针
+                        file.seek(0)
+                        mib_content = file.read().decode('utf-8', errors='ignore')
+                    elif hasattr(file, 'content'):
+                        # FileLikeObject 类型，直接读取内容属性
+                        mib_content = file.content
+                    else:
+                        # 其他类型，尝试直接读取
+                        try:
+                            mib_content = file.read().decode('utf-8', errors='ignore')
+                        except AttributeError:
+                            # 如果没有 read 方法，尝试获取内容
+                            mib_content = getattr(file, 'content', str(file))
+                    
+                    logger.debug(f"开始解析文件: {filename}")
                     
                     # 解析单个文件内容
                     file_objects = self.parse_mib_content_raw(mib_content, filename)
+                    
+                    # 记录找到的对象
+                    identifier_objects = [obj for obj in file_objects if obj['type'] == 'identifier']
+                    logger.debug(f"在文件 {filename} 中找到 {len(identifier_objects)} 个标识符对象")
+                    for obj in identifier_objects:
+                        logger.debug(f"  - {obj['text']}: {obj['oid']}")
                     
                     # 添加模块信息
                     module_name = os.path.splitext(filename)[0]
@@ -80,13 +98,6 @@ class MIBParser:
                 except Exception as e:
                     logger.error(f"解析文件 {file.filename} 时出错: {str(e)}")
                     continue
-            
-            # 清理临时文件
-            for file_path in saved_files:
-                try:
-                    os.remove(file_path)
-                except:
-                    pass
             
             if not all_objects:
                 return {'success': False, 'error': '在任何文件中都未找到有效的 MIB 对象'}
@@ -157,6 +168,7 @@ class MIBParser:
                 oid_part = line.split('::=')[1].strip()
                 current_object['oid'] = oid_part
                 current_object['oid_path'] = self.parse_oid_path(oid_part)
+                logger.debug(f"为对象 {current_object['text']} 设置 OID: {oid_part}")
                 current_object = None
             
             # 查找 OBJECT IDENTIFIER
@@ -178,14 +190,19 @@ class MIBParser:
             elif 'MODULE-IDENTITY' in line:
                 module_name = line.split('MODULE-IDENTITY')[0].strip()
                 if module_name:
-                    raw_objects.append({
+                    logger.debug(f"找到 MODULE-IDENTITY: {module_name}")
+                    # 创建模块对象，但先不设置 OID，等待后续的 ::= 定义
+                    current_module = {
                         'text': f"Module: {module_name}",
                         'type': 'module',
                         'oid': 'Module Identity',
                         'oid_path': [],
                         'numeric_oid': 'Module',
                         'children': []
-                    })
+                    }
+                    raw_objects.append(current_module)
+                    # 设置当前模块对象，用于后续 OID 定义
+                    current_object = current_module
         
         return raw_objects
     
@@ -239,6 +256,7 @@ class MIBParser:
                 oid_part = line.split('::=')[1].strip()
                 current_object['oid'] = oid_part
                 current_object['oid_path'] = self.parse_oid_path(oid_part)
+                logger.debug(f"为对象 {current_object['text']} 设置 OID: {oid_part}")
                 current_object = None
             
             # 查找 OBJECT IDENTIFIER
@@ -260,14 +278,19 @@ class MIBParser:
             elif 'MODULE-IDENTITY' in line:
                 module_name = line.split('MODULE-IDENTITY')[0].strip()
                 if module_name:
-                    raw_objects.insert(0, {
+                    logger.debug(f"找到 MODULE-IDENTITY: {module_name}")
+                    # 创建模块对象，但先不设置 OID，等待后续的 ::= 定义
+                    current_module = {
                         'text': f"Module: {module_name}",
                         'type': 'module',
                         'oid': 'Module Identity',
                         'oid_path': [],
                         'numeric_oid': 'Module',
                         'children': []
-                    })
+                    }
+                    raw_objects.insert(0, current_module)
+                    # 设置当前模块对象，用于后续 OID 定义
+                    current_object = current_module
         
         # 第二步：计算数字 OID
         if raw_objects:
@@ -323,9 +346,11 @@ class MIBParser:
         for obj in raw_objects:
             clean_name = obj['text'].replace('Module: ', '')
             name_to_obj[clean_name] = obj
+            logger.debug(f"收集对象: {clean_name}, 类型: {obj['type']}, OID: {obj.get('oid', 'N/A')}, 源文件: {obj.get('source_file', 'N/A')}")
         
         # 设置基础 OID 值（包括标准 OID 和常见企业 OID）
         name_to_numeric.update(self.standard_oid_map)
+        logger.debug(f"设置基础 OID 映射，包含 {len(self.standard_oid_map)} 个标准 OID")
         
         # 为每个对象计算数字 OID
         def calculate_oid_for_object(obj):
@@ -333,8 +358,10 @@ class MIBParser:
                 return
                 
             oid_str = obj.get('oid', '')
-            if not oid_str or oid_str == 'N/A' or oid_str == 'Module Identity':
+            if not oid_str or oid_str == 'N/A':
                 return
+            
+            logger.debug(f"计算对象 {obj['text']} 的 OID，oid_str: {oid_str}")
             
             # 解析 OID 字符串，如 "{ sampleSystemInfo 1 }"
             clean_oid = oid_str.strip('{ }')
@@ -348,26 +375,35 @@ class MIBParser:
                     # 查找父对象的数字 OID
                     parent_numeric = None
                     
+                    logger.debug(f"查找父对象 {parent_name} 的数字 OID")
+                    
                     if parent_name in name_to_numeric:
                         parent_numeric = name_to_numeric[parent_name]
+                        logger.debug(f"在 name_to_numeric 中找到 {parent_name}: {parent_numeric}")
                     elif parent_name in name_to_obj:
+                        logger.debug(f"在 name_to_obj 中找到 {parent_name}，递归计算其 OID，源文件: {name_to_obj[parent_name].get('source_file', 'N/A')}")
                         # 递归计算父对象
                         calculate_oid_for_object(name_to_obj[parent_name])
                         if name_to_obj[parent_name].get('numeric_oid', 'N/A') != 'N/A':
                             parent_numeric = name_to_obj[parent_name]['numeric_oid']
                             name_to_numeric[parent_name] = parent_numeric
+                            logger.debug(f"递归计算得到 {parent_name} 的 OID: {parent_numeric}")
                     
                     if parent_numeric:
                         full_oid = parent_numeric + '.' + child_id
                         obj['numeric_oid'] = full_oid
                         name_to_numeric[obj['text']] = full_oid
+                        logger.debug(f"为 {obj['text']} 设置数字 OID: {full_oid}")
+                    else:
+                        logger.debug(f"无法找到父对象 {parent_name} 的数字 OID")
             
             elif len(parts) == 1 and parts[0].isdigit():
                 # 直接数字
                 obj['numeric_oid'] = parts[0]
         
         # 多次迭代以确保所有依赖都得到解决
-        for _ in range(10):  # 增加迭代次数以处理复杂依赖
+        for iteration in range(10):  # 增加迭代次数以处理复杂依赖
+            logger.debug(f"开始第 {iteration + 1} 次迭代计算 OID")
             for obj in raw_objects:
                 calculate_oid_for_object(obj)
         
@@ -375,7 +411,8 @@ class MIBParser:
     
     def build_hierarchy_cross_files(self, raw_objects):
         """跨文件构建对象层次结构"""
-        # 过滤掉模块对象，专注于实际的 MIB 对象
+        # 保留模块对象，但将它们作为根节点
+        module_objects = [obj for obj in raw_objects if obj['type'] == 'module']
         mib_objects = [obj for obj in raw_objects if obj['type'] != 'module']
         
         # 如果我们有应该在 mib-2 层次结构中的 MIB 对象，使用新结构
@@ -389,17 +426,47 @@ class MIBParser:
                     break
             
             if has_mib2_objects:
-                return self.build_mib2_hierarchy(mib_objects)
+                mib2_tree = self.build_mib2_hierarchy(mib_objects)
+                # 如果有模块对象，将它们添加到树中
+                if module_objects:
+                    # 创建根节点来包含模块和 MIB-II 树
+                    root_node = {
+                        'text': 'MIB Tree',
+                        'type': 'root',
+                        'oid': 'Root',
+                        'numeric_oid': 'Root',
+                        'children': []
+                    }
+                    # 先添加模块对象
+                    for module in module_objects:
+                        root_node['children'].append(module)
+                    # 再添加 MIB-II 树
+                    root_node['children'].extend(mib2_tree)
+                    return [root_node]
+                return mib2_tree
         
         # 对于非 MIB-II 文件，使用基于 OID 深度的层次结构
-        return self.build_oid_based_hierarchy(raw_objects)
+        hierarchy = self.build_oid_based_hierarchy(raw_objects)
+        
+        # 确保模块对象被包含在结果中
+        # 注意：build_oid_based_hierarchy 现在已经包含了模块对象，所以这里只需要确保没有重复
+        if module_objects:
+            # 如果层次结构中没有模块对象，将它们添加到根级别
+            module_names = {obj['text'] for obj in module_objects}
+            hierarchy_modules = {obj['text'] for obj in hierarchy if obj['type'] == 'module'}
+            
+            for module in module_objects:
+                if module['text'] not in hierarchy_modules:
+                    hierarchy.append(module)
+        
+        return hierarchy
     
     def build_oid_based_hierarchy(self, raw_objects):
         """基于 OID 深度构建层次结构"""
-        # 过滤掉模块对象
-        mib_objects = [obj for obj in raw_objects if obj['type'] != 'module']
+        # 保留所有对象，包括模块对象，以便正确建立父子关系
+        all_objects = raw_objects
         
-        if not mib_objects:
+        if not all_objects:
             return []
         
         # 按数字 OID 排序（先按深度排序，同深度按数值排序）
@@ -417,7 +484,7 @@ class MIBParser:
             except:
                 return (999, '')
         
-        sorted_objects = sorted(mib_objects, key=sort_key)
+        sorted_objects = sorted(all_objects, key=sort_key)
         
         # 创建 OID 到对象的映射
         oid_to_obj = {}
