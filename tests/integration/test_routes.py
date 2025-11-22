@@ -49,6 +49,18 @@ class TestMainRoutes:
         assert response.status_code == 200
         assert b'html' in response.data.lower()
     
+    def test_oid_calculator_page_contains_huawei_option(self, client):
+        """Test OID calculator page contains Huawei transport device option"""
+        response = client.get('/oid-calculator')
+        
+        assert response.status_code == 200
+        assert b'huawei_transport_device' in response.data
+        # Check for either Chinese or English version using decode
+        response_text = response.data.decode('utf-8')
+        assert ('华为传送设备' in response_text or
+                'HuaWei Transport Device' in response_text or
+                'Huawei Transport Device' in response_text)
+    
     def test_mib_oid_generator_page_route(self, client):
         """Test MIB OID generator page route"""
         response = client.get('/mib-oid-generator')

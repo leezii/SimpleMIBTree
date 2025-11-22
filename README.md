@@ -34,10 +34,12 @@
 ### 🧮 SNMP命令生成器
 - 🎯 支持MIB Table (snmpwalk) 和叶子节点 (snmpget) 查询
 - 🔐 完整的SNMPv1/v2c/v3支持
+- 🏢 **华为传送设备支持**：SNMPv3模式下自动添加context参数(-n privacy)
 - ⚙️ 智能参数配置和验证
 - 📋 一键复制生成的命令
 - 🎨 直观的用户界面
 - 📝 详细的使用示例和帮助文本
+- 🔗 **命令参数帮助链接**：快速访问Net-SNMP官方文档
 
 ### 🔢 MIB OID生成器
 - 🎯 智能OID路径计算和生成
@@ -119,7 +121,9 @@ cd src && python app.py
 - 选择查询类型（MIB Table或叶子节点）
 - 输入OID或MIB名称
 - 配置SNMP参数（版本、community等）
+- **华为传送设备**：如果目标设备是华为传送设备且使用SNMPv3，勾选"华为传送设备"选项自动添加context参数
 - 点击"生成命令"获取可执行的SNMP命令
+- **命令参数帮助**：点击"命令参数帮助"链接查看详细的SNMP命令参数说明
 
 ### 4. 使用MIB OID生成器
 - 在导航页面点击"MIB OID生成器"
@@ -147,6 +151,20 @@ cd src && python app.py
       │   └── 🔧 sampleSystemVersion { sampleSystemInfo 2 } [1.3.6.1.4.1.99999.1.1.2]
       └── 🔧 sampleConfigTable { sampleObjects 2 } [1.3.6.1.4.1.99999.1.2]
           └── 🔧 sampleConfigEntry { sampleConfigTable 1 } [1.3.6.1.4.1.99999.1.2.1]
+  ```
+
+### 7. 华为传送设备SNMP配置示例
+- **SNMPv3 + 华为传送设备**：
+  ```
+  snmpget -v3 -u "admin" -a SHA -A "auth123" -x AES -X "priv123" -l authPriv -n privacy 192.168.1.1 sysDescr.0
+  ```
+- **普通SNMPv3**：
+  ```
+  snmpget -v3 -u "admin" -a SHA -A "auth123" -x AES -X "priv123" -l authPriv 192.168.1.1 sysDescr.0
+  ```
+- **SNMPv2c**：
+  ```
+  snmpget -v2c -c "public" 192.168.1.1 sysDescr.0
   ```
 
 ## 支持的MIB元素
