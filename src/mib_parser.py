@@ -76,9 +76,12 @@ class MIBParser:
                     
                     # 记录找到的对象
                     identifier_objects = [obj for obj in file_objects if obj['type'] == 'identifier']
-                    logger.debug(f"在文件 {filename} 中找到 {len(identifier_objects)} 个标识符对象")
+                    module_objects = [obj for obj in file_objects if obj['type'] == 'module']
+                    logger.debug(f"在文件 {filename} 中找到 {len(identifier_objects)} 个标识符对象和 {len(module_objects)} 个模块对象")
                     for obj in identifier_objects:
-                        logger.debug(f"  - {obj['text']}: {obj['oid']}")
+                        logger.debug(f"  - 标识符: {obj['text']}: {obj['oid']}")
+                    for obj in module_objects:
+                        logger.debug(f"  - 模块: {obj['text']}")
                     
                     # 添加模块信息
                     module_name = os.path.splitext(filename)[0]
@@ -330,6 +333,23 @@ class MIBParser:
         if not all_objects:
             return []
         
+        # 检查并记录模块对象的重复情况
+        module_objects = [obj for obj in all_objects if obj['type'] == 'module']
+        module_names = {}
+        
+        for obj in module_objects:
+            module_name = obj['text'].replace('Module: ', '')
+            if module_name not in module_names:
+                module_names[module_name] = []
+            module_names[module_name].append(obj)
+        
+        # 记录重复的模块
+        for module_name, objects in module_names.items():
+            if len(objects) > 1:
+                logger.warning(f"发现重复模块 '{module_name}'，出现在 {len(objects)} 个位置:")
+                for obj in objects:
+                    logger.warning(f"  - 源文件: {obj.get('source_file', 'N/A')}")
+        
         # 计算数字 OID（跨文件）
         all_objects = self.calculate_numeric_oids_cross_files(all_objects)
         
@@ -415,6 +435,20 @@ class MIBParser:
         module_objects = [obj for obj in raw_objects if obj['type'] == 'module']
         mib_objects = [obj for obj in raw_objects if obj['type'] != 'module']
         
+        # 去重模块对象：按模块名去重，保留信息最完整的
+        unique_modules = {}
+        for module in module_objects:
+            module_name = module['text'].replace('Module: ', '')
+            if module_name not in unique_modules:
+                unique_modules[module_name] = module
+            else:
+                # 如果有重复，记录并保留第一个
+                logger.warning(f"模块 '{module_name}' 重复，源文件: {module.get('source_file', 'N/A')}，已跳过")
+        
+        # 使用去重后的模块对象
+        module_objects = list(unique_modules.values())
+        logger.debug(f"去重后有 {len(module_objects)} 个唯一模块对象")
+        
         # 如果我们有应该在 mib-2 层次结构中的 MIB 对象，使用新结构
         if mib_objects:
             # 通过查找关键指标来检查这些是否为标准 MIB-II 对象
@@ -446,18 +480,8 @@ class MIBParser:
                 return mib2_tree
         
         # 对于非 MIB-II 文件，使用基于 OID 深度的层次结构
+        # 使用去重后的所有对象，包括模块对象
         hierarchy = self.build_oid_based_hierarchy(raw_objects)
-        
-        # 确保模块对象被包含在结果中
-        # 注意：build_oid_based_hierarchy 现在已经包含了模块对象，所以这里只需要确保没有重复
-        if module_objects:
-            # 如果层次结构中没有模块对象，将它们添加到根级别
-            module_names = {obj['text'] for obj in module_objects}
-            hierarchy_modules = {obj['text'] for obj in hierarchy if obj['type'] == 'module'}
-            
-            for module in module_objects:
-                if module['text'] not in hierarchy_modules:
-                    hierarchy.append(module)
         
         return hierarchy
     
@@ -468,6 +492,30 @@ class MIBParser:
         
         if not all_objects:
             return []
+        
+        # 先对模块对象进行去重
+        module_objects = [obj for obj in all_objects if obj['type'] == 'module']
+        unique_modules = {}
+        for module in module_objects:
+            module_name = module['text'].replace('Module: ', '')
+            if module_name not in unique_modules:
+                unique_modules[module_name] = module
+            else:
+                logger.warning(f"build_oid_based_hierarchy: 跳过重复模块 '{module_name}'，源文件: {module.get('source_file', 'N/A')}")
+        
+        # 过滤掉重复的模块对象
+        filtered_objects = []
+        module_names_seen = set()
+        for obj in all_objects:
+            if obj['type'] == 'module':
+                module_name = obj['text'].replace('Module: ', '')
+                if module_name in unique_modules and obj == unique_modules[module_name]:
+                    filtered_objects.append(obj)
+                    module_names_seen.add(module_name)
+            else:
+                filtered_objects.append(obj)
+        
+        all_objects = filtered_objects
         
         # 按数字 OID 排序（先按深度排序，同深度按数值排序）
         def sort_key(obj):
