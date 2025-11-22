@@ -398,10 +398,29 @@
                     <div class="form-group">
                         <input type="password" id="priv_password" placeholder="{{ _('加密密码') }}">
                     </div>
+                    
+                    <div class="form-group">
+                        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                            <input type="checkbox" id="huawei_transport_device" style="width: auto; margin: 0; cursor: pointer;">
+                            <label for="huawei_transport_device" style="margin: 0; cursor: pointer; font-weight: 600; color: #374151;">{{ _('华为传送设备') }}</label>
+                        </div>
+                        <div class="help-text">{{ _('勾选此项后，将在SNMPv3命令中自动添加context参数(-n privacy)') }}</div>
+                    </div>
                 </div>
                 
                 <div class="form-group">
-                    <label for="additional_options">{{ _('额外参数') }}</label>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                        <label for="additional_options">{{ _('额外参数') }}</label>
+                        <a href="https://net-snmp.sourceforge.io/docs/man/snmpcmd.html" target="_blank"
+                           style="color: #4f46e5; text-decoration: none; font-size: 0.9rem; display: flex; align-items: center; gap: 4px;">
+                            <span>{{ _('命令参数帮助') }}</span>
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+                                <polyline points="15,3 21,3 21,9"></polyline>
+                                <line x1="10" y1="14" x2="21" y2="3"></line>
+                            </svg>
+                        </a>
+                    </div>
                     <textarea id="additional_options" placeholder="{{ _('例如: -r 3 -t 10') }}"></textarea>
                     <div class="help-text">{{ _('可选的额外SNMP参数，如重试次数(-r)和超时时间(-t)') }}</div>
                 </div>
@@ -522,6 +541,7 @@
                 const authPassword = document.getElementById('auth_password').value.trim();
                 const privProtocol = document.getElementById('priv_protocol').value;
                 const privPassword = document.getElementById('priv_password').value.trim();
+                const huaweiTransportDevice = document.getElementById('huawei_transport_device').checked;
                 
                 command += ` -u "${username}"`;
                 
@@ -536,6 +556,11 @@
                     command += ` -l authNoPriv`;
                 } else {
                     command += ` -l noAuthNoPriv`;
+                }
+                
+                // 添加华为传送设备的context参数
+                if (huaweiTransportDevice) {
+                    command += ` -n privacy`;
                 }
             } else {
                 command += ` -c "${community}"`;
@@ -593,6 +618,7 @@
             document.getElementById('auth_password').value = '';
             document.getElementById('priv_protocol').value = '';
             document.getElementById('priv_password').value = '';
+            document.getElementById('huawei_transport_device').checked = false;
             
             // 重置查询类型
             document.querySelector('input[name="query_type"][value="table"]').checked = true;
