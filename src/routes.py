@@ -4,8 +4,9 @@ import os
 from datetime import datetime
 from flask import Blueprint, render_template, request, jsonify, session, redirect, url_for, send_file
 from file_handler import validate_and_process_files, save_uploaded_file, cleanup_file
-from mib_parser import mib_parser
+from mib_parser import mib_parser, get_mib_parser
 from mib_manager import get_mib_manager, MIBManagementError
+from oid_generator import OIDGenerator
 
 logger = logging.getLogger(__name__)
 
@@ -612,6 +613,122 @@ def parse_mib_file(file_id):
             'error': {
                 'code': 'INTERNAL_ERROR',
                 'message': '解析MIB文件失败',
+                'timestamp': datetime.utcnow().isoformat()
+            }
+        }), 500
+
+# OID生成器API端点
+
+def get_oid_generator():
+    """获取OID生成器实例"""
+    mib_manager = get_mib_manager()
+    parser = get_mib_parser()
+    return OIDGenerator(mib_manager, parser)
+
+@main_bp.route('/api/device-types/<device_id>/mib-tables', methods=['GET'])
+def get_device_mib_tables(device_id):
+    """获取设备类型的MIB表列表"""
+    try:
+        oid_generator = get_oid_generator()
+        result = oid_generator.get_device_mib_tables(device_id)
+        return jsonify(result)
+    except Exception as e:
+        logger.error(f"获取设备MIB表失败: {str(e)}")
+        return jsonify({
+            'success': False,
+            'error': {
+                'code': 'INTERNAL_ERROR',
+                'message': '获取MIB表失败',
+                'timestamp': datetime.utcnow().isoformat()
+            }
+        }), 500
+
+@main_bp.route('/api/oid-generator/generate', methods=['POST'])
+def generate_oids():
+    """生成OID"""
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({
+                'success': False,
+                'error': {
+                    'code': 'INVALID_REQUEST',
+                    'message': '请求数据无效',
+                    'timestamp': datetime.utcnow().isoformat()
+                }
+            }), 400
+        
+        device_id = data.get('device_id')
+        table_name = data.get('table_name')
+        index_values = data.get('index_values', [])
+        selected_columns = data.get('selected_columns', [])
+        
+        if not device_id or not table_name:
+            return jsonify({
+                'success': False,
+                'error': {
+                    'code': 'MISSING_PARAMETERS',
+                    'message': '缺少必需参数: device_id, table_name',
+                    'timestamp': datetime.utcnow().isoformat()
+                }
+            }), 400
+        
+        oid_generator = get_oid_generator()
+        result = oid_generator.generate_oid(
+            device_id=device_id,
+            table_name=table_name,
+            index_values=index_values,
+            selected_columns=selected_columns,
+            output_format=data.get('output_format', 'oid'),
+            target_ip=data.get('target_ip', '192.168.1.100'),
+            community=data.get('community', 'public'),
+            snmp_version=data.get('snmp_version', '2c')
+        )
+        
+        return jsonify(result)
+    except Exception as e:
+        logger.error(f"生成OID失败: {str(e)}")
+        return jsonify({
+            'success': False,
+            'error': {
+                'code': 'INTERNAL_ERROR',
+                'message': '生成OID失败',
+                'timestamp': datetime.utcnow().isoformat()
+            }
+        }), 500
+
+@main_bp.route('/api/oid-generator/templates', methods=['GET'])
+def get_oid_templates():
+    """获取预定义模板"""
+    try:
+        oid_generator = get_oid_generator()
+        result = oid_generator.get_templates()
+        return jsonify(result)
+    except Exception as e:
+        logger.error(f"获取模板失败: {str(e)}")
+        return jsonify({
+            'success': False,
+            'error': {
+                'code': 'INTERNAL_ERROR',
+                'message': '获取模板失败',
+                'timestamp': datetime.utcnow().isoformat()
+            }
+        }), 500
+
+@main_bp.route('/api/oid-generator/huawei-tables', methods=['GET'])
+def get_huawei_special_tables():
+    """获取华为设备特殊表配置"""
+    try:
+        oid_generator = get_oid_generator()
+        result = oid_generator.get_huawei_tables()
+        return jsonify(result)
+    except Exception as e:
+        logger.error(f"获取华为表配置失败: {str(e)}")
+        return jsonify({
+            'success': False,
+            'error': {
+                'code': 'INTERNAL_ERROR',
+                'message': '获取华为表配置失败',
                 'timestamp': datetime.utcnow().isoformat()
             }
         }), 500

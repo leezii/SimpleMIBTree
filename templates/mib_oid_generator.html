@@ -338,29 +338,31 @@
                     </h2>
                     
                     <div class="form-group">
-                        <label for="table_type">MIB表类型</label>
-                        <select id="table_type" onchange="updateTableOptions()">
-                            <option value="">请选择表类型</option>
-                            <option value="interface">接口表 (ifTable/ifXTable)</option>
-                            <option value="ip">IP地址表 (ipAddrTable)</option>
-                            <option value="route">路由表 (ipRouteTable)</option>
-                            <option value="tcp">TCP连接表 (tcpConnTable)</option>
-                            <option value="udp">UDP监听表 (udpTable)</option>
-                            <option value="custom">自定义表</option>
+                        <label for="device_type">设备类型</label>
+                        <select id="device_type" onchange="loadDeviceTables()">
+                            <option value="">请选择设备类型</option>
                         </select>
-                        <div class="help-text">选择要生成OID的MIB表类型</div>
+                        <div class="help-text">选择设备类型以加载对应的MIB表</div>
                     </div>
                     
                     <div class="form-group">
-                        <label for="base_oid">基础OID</label>
-                        <input type="text" id="base_oid" placeholder="例如: 1.3.6.1.2.1.2.2">
-                        <div class="help-text">表的基础OID，选择表类型后自动填充</div>
+                        <label for="table_name">MIB表名称</label>
+                        <select id="table_name" onchange="updateTableInfo()">
+                            <option value="">请先选择设备类型</option>
+                        </select>
+                        <div class="help-text">选择要生成OID的MIB表</div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="table_info">表信息</label>
+                        <textarea id="table_info" readonly style="background: #f8fafc; min-height: 80px;" placeholder="选择表后显示详细信息"></textarea>
+                        <div class="help-text">表的基础OID和描述信息</div>
                     </div>
                     
                     <div class="form-group">
                         <label for="index_values">索引值</label>
                         <textarea id="index_values" placeholder="输入索引值，每行一个&#10;例如:&#10;1&#10;2&#10;10&#10;或者:&#10;192.168.1.1&#10;10.0.0.1"></textarea>
-                        <div class="help-text">输入表的索引值，支持数字和IP地址格式</div>
+                        <div class="help-text" id="index_help">输入表的索引值，支持数字和IP地址格式</div>
                     </div>
                     
                     <div class="form-group">
@@ -368,7 +370,7 @@
                         <select id="column_select" multiple style="height: 120px;">
                             <option value="all">所有列</option>
                         </select>
-                        <div class="help-text">选择要生成OID的列，按住Ctrl多选</div>
+                        <div class="help-text" id="column_help">选择要生成OID的列，按住Ctrl多选</div>
                     </div>
                     
                     <div class="form-row">
@@ -421,35 +423,11 @@
                 <div class="template-title">🎯 快速模板</div>
                 <div class="help-text">点击模板快速填充常用配置</div>
                 
-                <div class="template-grid">
-                    <div class="template-card" onclick="loadTemplate('interface_basic')">
-                        <div class="template-name">基础接口信息</div>
-                        <div class="template-desc">获取所有接口的基本信息</div>
-                    </div>
-                    
-                    <div class="template-card" onclick="loadTemplate('interface_status')">
-                        <div class="template-name">接口状态监控</div>
-                        <div class="template-desc">监控接口运行状态和流量</div>
-                    </div>
-                    
-                    <div class="template-card" onclick="loadTemplate('ip_addresses')">
-                        <div class="template-name">IP地址信息</div>
-                        <div class="template-desc">获取设备所有IP地址</div>
-                    </div>
-                    
-                    <div class="template-card" onclick="loadTemplate('routing_table')">
-                        <div class="template-name">路由表查询</div>
-                        <div class="template-desc">获取设备路由表信息</div>
-                    </div>
-                    
-                    <div class="template-card" onclick="loadTemplate('tcp_connections')">
-                        <div class="template-name">TCP连接监控</div>
-                        <div class="template-desc">监控当前TCP连接状态</div>
-                    </div>
-                    
-                    <div class="template-card" onclick="loadTemplate('system_info')">
-                        <div class="template-name">系统信息</div>
-                        <div class="template-desc">获取设备系统基本信息</div>
+                <div class="template-grid" id="template_grid">
+                    <!-- 模板将通过JavaScript动态加载 -->
+                    <div class="template-card">
+                        <div class="template-name">加载中...</div>
+                        <div class="template-desc">正在获取模板</div>
                     </div>
                 </div>
             </div>
@@ -486,143 +464,273 @@
     </div>
 
     <script>
-        // 表类型配置
-        const tableConfigs = {
-            interface: {
-                baseOid: '1.3.6.1.2.1.2.2',
-                columns: ['ifIndex', 'ifDescr', 'ifType', 'ifMtu', 'ifSpeed', 'ifPhysAddress', 'ifAdminStatus', 'ifOperStatus', 'ifInOctets', 'ifOutOctets']
-            },
-            ip: {
-                baseOid: '1.3.6.1.2.1.4.20',
-                columns: ['ipAdEntAddr', 'ipAdEntIfIndex', 'ipAdEntNetMask', 'ipAdEntBcastAddr', 'ipAdEntReasmMaxSize']
-            },
-            route: {
-                baseOid: '1.3.6.1.2.1.4.21',
-                columns: ['ipRouteDest', 'ipRouteIfIndex', 'ipRouteMetric1', 'ipRouteNextHop', 'ipRouteType', 'ipRouteProto']
-            },
-            tcp: {
-                baseOid: '1.3.6.1.2.1.6.13',
-                columns: ['tcpConnState', 'tcpConnLocalAddress', 'tcpConnLocalPort', 'tcpConnRemAddress', 'tcpConnRemPort']
-            },
-            udp: {
-                baseOid: '1.3.6.1.2.1.7.5',
-                columns: ['udpLocalAddress', 'udpLocalPort']
-            }
-        };
+        // 全局变量
+        let currentTables = [];
+        let currentTemplates = [];
+        let currentTableInfo = null;
         
-        // 模板配置
-        const templates = {
-            interface_basic: {
-                table_type: 'interface',
-                index_values: '1\n2\n3\n4\n5',
-                columns: ['ifDescr', 'ifType', 'ifAdminStatus', 'ifOperStatus'],
-                output_format: 'snmpget'
-            },
-            interface_status: {
-                table_type: 'interface',
-                index_values: '1\n2\n3\n4\n5',
-                columns: ['ifDescr', 'ifOperStatus', 'ifInOctets', 'ifOutOctets'],
-                output_format: 'snmpget'
-            },
-            ip_addresses: {
-                table_type: 'ip',
-                index_values: '192.168.1.1\n10.0.0.1\n172.16.1.1',
-                columns: ['ipAdEntAddr', 'ipAdEntIfIndex', 'ipAdEntNetMask'],
-                output_format: 'snmpget'
-            },
-            routing_table: {
-                table_type: 'route',
-                index_values: '0.0.0.0\n192.168.1.0\n10.0.0.0',
-                columns: ['ipRouteDest', 'ipRouteIfIndex', 'ipRouteNextHop', 'ipRouteType'],
-                output_format: 'snmpget'
-            },
-            tcp_connections: {
-                table_type: 'tcp',
-                index_values: '192.168.1.1.80.10.0.0.1.12345\n192.168.1.1.22.10.0.0.2.54321',
-                columns: ['tcpConnState', 'tcpConnLocalAddress', 'tcpConnLocalPort'],
-                output_format: 'snmpget'
-            },
-            system_info: {
-                table_type: 'custom',
-                base_oid: '1.3.6.1.2.1.1',
-                index_values: '0',
-                columns: ['sysDescr', 'sysObjectID', 'sysUpTime', 'sysContact', 'sysName', 'sysLocation'],
-                output_format: 'snmpget'
-            }
-        };
+        // 页面初始化
+        document.addEventListener('DOMContentLoaded', () => {
+            loadDeviceTypes();
+            loadTemplates();
+            
+            // 添加回车键支持
+            document.getElementById('index_values').addEventListener('keydown', (e) => {
+                if (e.ctrlKey && e.key === 'Enter') {
+                    generateOIDs();
+                }
+            });
+        });
         
-        // 更新表选项
-        function updateTableOptions() {
-            const tableType = document.getElementById('table_type').value;
-            const columnSelect = document.getElementById('column_select');
-            const baseOidInput = document.getElementById('base_oid');
-            
-            // 清空现有选项
-            columnSelect.innerHTML = '<option value="all">所有列</option>';
-            
-            if (tableType && tableConfigs[tableType]) {
-                const config = tableConfigs[tableType];
+        // 加载设备类型
+        async function loadDeviceTypes() {
+            try {
+                console.log('开始加载设备类型');
+                const response = await fetch('/api/device-types');
+                const result = await response.json();
                 
-                // 填充基础OID
-                baseOidInput.value = config.baseOid;
+                console.log('设备类型API响应:', result);
                 
-                // 添加列选项
-                config.columns.forEach(column => {
-                    const option = document.createElement('option');
-                    option.value = column;
-                    option.textContent = column;
-                    columnSelect.appendChild(option);
-                });
-            } else if (tableType === 'custom') {
-                baseOidInput.value = '';
-                baseOidInput.placeholder = '输入自定义表的基础OID';
-                
-                // 从自定义列名输入框获取列
-                const customColumns = document.getElementById('custom_columns').value;
-                if (customColumns) {
-                    const columns = customColumns.split(',').map(col => col.trim());
-                    columns.forEach(column => {
-                        if (column) {
-                            const option = document.createElement('option');
-                            option.value = column;
-                            option.textContent = column;
-                            columnSelect.appendChild(option);
+                if (result.success) {
+                    const select = document.getElementById('device_type');
+                    select.innerHTML = '<option value="">请选择设备类型</option>';
+                    
+                    console.log('设备类型数量:', result.data.length);
+                    
+                    result.data.forEach((device, index) => {
+                        const option = document.createElement('option');
+                        option.value = device.id;
+                        option.textContent = `${device.name} (${device.description})`;
+                        select.appendChild(option);
+                        
+                        if (index < 3) {
+                            console.log(`设备 ${index + 1}:`, device);
                         }
                     });
+                    
+                    console.log('设备类型选择器选项数量:', select.options.length);
+                    console.log('设备类型加载完成');
+                } else {
+                    console.error('设备类型API返回失败:', result);
+                    showAlert('加载设备类型失败', 'error');
                 }
+            } catch (error) {
+                console.error('加载设备类型失败:', error);
+                showAlert('加载设备类型失败', 'error');
+            }
+        }
+        
+        // 加载设备的MIB表
+        async function loadDeviceTables() {
+            const deviceType = document.getElementById('device_type').value;
+            const tableSelect = document.getElementById('table_name');
+            
+            // 重置表选择
+            tableSelect.innerHTML = '<option value="">请选择MIB表</option>';
+            document.getElementById('table_info').value = '';
+            document.getElementById('column_select').innerHTML = '<option value="all">所有列</option>';
+            
+            if (!deviceType) {
+                return;
+            }
+            
+            try {
+                console.log('正在加载设备表:', deviceType);
+                const response = await fetch(`/api/device-types/${deviceType}/mib-tables`);
+                const result = await response.json();
+                
+                console.log('API响应:', result);
+                
+                if (result.success) {
+                    currentTables = result.data.tables;
+                    console.log('加载的表数量:', currentTables.length);
+                    console.log('前5个表:', currentTables.slice(0, 5));
+                    
+                    try {
+                        console.log('开始添加表选项，表数量:', result.data.tables.length);
+                        console.log('表选择器当前选项数量:', tableSelect.options.length);
+                        
+                        result.data.tables.forEach((table, index) => {
+                            const option = document.createElement('option');
+                            option.value = table.name;
+                            option.textContent = `${table.name} - ${table.description}`;
+                            console.log(`创建选项 ${index + 1}:`, option.value, option.textContent);
+                            tableSelect.appendChild(option);
+                            console.log(`选项 ${index + 1} 已添加，当前选项数量:`, tableSelect.options.length);
+                            
+                            // 只记录前5个表的详细信息
+                            if (index < 5) {
+                                console.log(`表 ${index + 1}:`, table);
+                            }
+                        });
+                        
+                        console.log('表选择器最终选项数量:', tableSelect.options.length);
+                        console.log('添加选项完成');
+                        
+                        // 检查是否成功添加了选项
+                        if (tableSelect.options.length <= 1) {
+                            console.error('表选项添加失败，选项数量:', tableSelect.options.length);
+                        } else {
+                            console.log('表选项添加成功，第一个选项:', tableSelect.options[1].textContent);
+                        }
+                    } catch (error) {
+                        console.error('添加表选项时出错:', error);
+                    }
+                } else {
+                    showAlert(result.error || '加载MIB表失败', 'error');
+                }
+            } catch (error) {
+                console.error('加载MIB表失败:', error);
+                showAlert('加载MIB表失败', 'error');
+            }
+        }
+        
+        // 更新表信息
+        function updateTableInfo() {
+            console.log('updateTableInfo 被调用');
+            const tableName = document.getElementById('table_name').value;
+            console.log('选中的表名:', tableName);
+            const tableInfo = document.getElementById('table_info');
+            const columnSelect = document.getElementById('column_select');
+            const indexHelp = document.getElementById('index_help');
+            const columnHelp = document.getElementById('column_help');
+            
+            // 重置列选择
+            columnSelect.innerHTML = '<option value="all">所有列</option>';
+            
+            if (!tableName) {
+                console.log('没有选择表名');
+                tableInfo.value = '';
+                indexHelp.textContent = '输入表的索引值，支持数字和IP地址格式';
+                columnHelp.textContent = '选择要生成OID的列，按住Ctrl多选';
+                return;
+            }
+            
+            console.log('当前表数量:', currentTables.length);
+            
+            // 查找表信息
+            const table = currentTables.find(t => t.name === tableName);
+            console.log('找到的表:', table);
+            
+            if (!table) {
+                console.log('未找到表信息');
+                tableInfo.value = '未找到表信息';
+                return;
+            }
+            
+            currentTableInfo = table;
+            
+            // 显示表信息
+            tableInfo.value = `表名: ${table.name}\nOID: ${table.oid}\n描述: ${table.description}\n类型: ${table.type}`;
+            console.log('表信息已更新:', tableInfo.value);
+            
+            // 更新索引帮助信息
+            if (table.index_columns && table.index_columns.length > 0) {
+                const indexDesc = table.index_columns.map(idx =>
+                    `${idx.name} (${idx.type})`
+                ).join(', ');
+                indexHelp.textContent = `索引列: ${indexDesc}`;
+            }
+            
+            // 更新列帮助信息
+            if (table.columns && table.columns.length > 0) {
+                columnHelp.textContent = `共${table.columns.length}列可选`;
+                console.log('表列数量:', table.columns.length);
+                
+                // 添加列选项
+                table.columns.forEach((column, index) => {
+                    if (index < 5) {  // 只记录前5列
+                        console.log(`列 ${index + 1}:`, column);
+                    }
+                    const option = document.createElement('option');
+                    option.value = column.name;
+                    option.textContent = `${column.name} - ${column.description}`;
+                    columnSelect.appendChild(option);
+                });
+                console.log('列选择器选项数量:', columnSelect.options.length);
+                console.log('列选项添加完成');
+            } else {
+                console.log('表没有列信息');
             }
         }
         
         // 加载模板
-        function loadTemplate(templateName) {
-            const template = templates[templateName];
+        async function loadTemplates() {
+            try {
+                const response = await fetch('/api/oid-generator/templates');
+                const result = await response.json();
+                
+                if (result.success) {
+                    currentTemplates = result.data.templates;
+                    displayTemplates();
+                }
+            } catch (error) {
+                console.error('加载模板失败:', error);
+            }
+        }
+        
+        // 显示模板
+        function displayTemplates() {
+            const templateGrid = document.getElementById('template_grid');
+            templateGrid.innerHTML = '';
+            
+            Object.keys(currentTemplates).forEach(templateId => {
+                const template = currentTemplates[templateId];
+                const card = document.createElement('div');
+                card.className = 'template-card';
+                card.onclick = () => loadTemplate(templateId);
+                
+                card.innerHTML = `
+                    <div class="template-name">${template.name}</div>
+                    <div class="template-desc">${template.description}</div>
+                `;
+                
+                templateGrid.appendChild(card);
+            });
+        }
+        
+        // 加载模板
+        async function loadTemplate(templateId) {
+            const template = currentTemplates[templateId];
             if (!template) return;
             
-            document.getElementById('table_type').value = template.table_type;
-            updateTableOptions();
+            // 设置设备类型和表
+            if (template.device_type) {
+                document.getElementById('device_type').value = template.device_type;
+                await loadDeviceTables();
+                
+                if (template.table_name) {
+                    document.getElementById('table_name').value = template.table_name;
+                    updateTableInfo();
+                }
+            }
             
+            // 设置索引值
             if (template.index_values) {
                 document.getElementById('index_values').value = template.index_values;
             }
             
-            if (template.columns) {
+            // 选择列
+            if (template.columns && currentTableInfo) {
                 const columnSelect = document.getElementById('column_select');
                 Array.from(columnSelect.options).forEach(option => {
                     option.selected = template.columns.includes(option.value);
                 });
             }
             
+            // 设置输出格式
             if (template.output_format) {
                 document.getElementById('output_format').value = template.output_format;
             }
             
-            showAlert(`已加载模板: ${templateName}`, 'success');
+            showAlert(`已加载模板: ${template.name}`, 'success');
         }
         
+        
         // 生成OID
-        function generateOIDs() {
-            const tableType = document.getElementById('table_type').value;
-            const baseOid = document.getElementById('base_oid').value.trim();
+        async function generateOIDs() {
+            const deviceType = document.getElementById('device_type').value;
+            const tableName = document.getElementById('table_name').value;
             const indexValues = document.getElementById('index_values').value.trim();
             const outputFormat = document.getElementById('output_format').value;
             const targetIp = document.getElementById('target_ip').value.trim();
@@ -630,8 +738,13 @@
             const snmpVersion = document.getElementById('snmp_version').value;
             
             // 验证输入
-            if (!baseOid) {
-                showAlert('请输入基础OID', 'error');
+            if (!deviceType) {
+                showAlert('请选择设备类型', 'error');
+                return;
+            }
+            
+            if (!tableName) {
+                showAlert('请选择MIB表', 'error');
                 return;
             }
             
@@ -654,102 +767,85 @@
             // 解析索引值
             const indices = indexValues.split('\n').map(index => index.trim()).filter(index => index);
             
-            // 生成OID
-            const results = [];
-            
-            indices.forEach(index => {
-                selectedColumns.forEach(column => {
-                    let oid = '';
-                    let displayText = '';
-                    
-                    if (tableType === 'custom') {
-                        // 自定义表：直接拼接基础OID + 列名 + 索引
-                        oid = `${baseOid}.${column}.${index}`;
-                        displayText = `${column}[${index}]`;
-                    } else {
-                        // 标准表：基础OID + 列索引 + 索引
-                        const columnIndex = getColumnIndex(tableType, column);
-                        const processedIndex = processIndex(index, tableType);
-                        oid = `${baseOid}.${columnIndex}.${processedIndex}`;
-                        displayText = `${column}[${index}]`;
-                    }
-                    
-                    let result = '';
-                    
-                    switch (outputFormat) {
-                        case 'oid':
-                            result = oid;
-                            break;
-                        case 'snmpget':
-                            result = generateSnmpGetCommand(oid, targetIp, community, snmpVersion);
-                            break;
-                        case 'snmpwalk':
-                            result = generateSnmpWalkCommand(baseOid, targetIp, community, snmpVersion);
-                            break;
-                        case 'table':
-                            result = `${displayText}\t${oid}`;
-                            break;
-                    }
-                    
-                    results.push(result);
+            try {
+                // 构建请求数据
+                const requestData = {
+                    device_id: deviceType,
+                    table_name: tableName,
+                    index_values: indices,
+                    selected_columns: selectedColumns,
+                    output_format: outputFormat,
+                    target_ip: targetIp || '192.168.1.100',
+                    community: community || 'public',
+                    snmp_version: snmpVersion || '2c'
+                };
+                
+                // 发送请求
+                const response = await fetch('/api/oid-generator/generate', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(requestData)
                 });
-            });
-            
-            // 显示结果
-            displayResults(results);
-            showAlert(`成功生成 ${results.length} 个OID`, 'success');
-        }
-        
-        // 获取列索引
-        function getColumnIndex(tableType, columnName) {
-            const config = tableConfigs[tableType];
-            if (!config) return '1';
-            
-            const index = config.columns.indexOf(columnName);
-            return index >= 0 ? (index + 1).toString() : '1';
-        }
-        
-        // 处理索引值
-        function processIndex(index, tableType) {
-            if (tableType === 'ip' || tableType === 'tcp') {
-                // IP地址格式：转换为数字格式
-                if (index.includes('.')) {
-                    return index.split('.').join('.');
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    displayGeneratedResults(result.data.generated_oids);
+                    showAlert(`成功生成 ${result.data.generated_oids.length} 个OID`, 'success');
+                } else {
+                    showAlert(result.error || '生成OID失败', 'error');
                 }
+            } catch (error) {
+                console.error('生成OID失败:', error);
+                showAlert('生成OID失败: ' + error.message, 'error');
             }
-            return index;
         }
         
-        // 生成snmpget命令
-        function generateSnmpGetCommand(oid, targetIp, community, version) {
-            let command = `snmpget -v${version}`;
+        // 显示生成的结果
+        function displayGeneratedResults(results) {
+            const resultsDiv = document.getElementById('results');
+            const outputFormat = document.getElementById('output_format').value;
             
-            if (version !== '3') {
-                command += ` -c ${community}`;
+            if (outputFormat === 'table') {
+                let content = '列名\tOID\t格式\n';
+                content += '----\t---\t----\n';
+                results.forEach(result => {
+                    content += `${result.column_name}\t${result.oid}\t${result.format}\n`;
+                });
+                resultsDiv.textContent = content;
+            } else {
+                resultsDiv.innerHTML = '';
+                results.forEach(result => {
+                    const resultDiv = document.createElement('div');
+                    resultDiv.className = 'oid-result';
+                    
+                    let content = `
+                        <div class="oid-header">
+                            <span class="oid-name">${result.column_name}</span>
+                            <button class="copy-btn" onclick="copyToClipboard('${result.oid}')">复制</button>
+                        </div>
+                        <div class="oid-value">${result.oid}</div>
+                    `;
+                    
+                    if (result.command) {
+                        content += `<div style="margin-top: 8px; font-size: 0.85rem; color: #6b7280;">${result.command}</div>`;
+                    }
+                    
+                    resultDiv.innerHTML = content;
+                    resultsDiv.appendChild(resultDiv);
+                });
             }
-            
-            if (targetIp) {
-                command += ` ${targetIp}`;
-            }
-            
-            command += ` ${oid}`;
-            return command;
         }
         
-        // 生成snmpwalk命令
-        function generateSnmpWalkCommand(baseOid, targetIp, community, version) {
-            let command = `snmpwalk -v${version}`;
-            
-            if (version !== '3') {
-                command += ` -c ${community}`;
-            }
-            
-            if (targetIp) {
-                command += ` ${targetIp}`;
-            }
-            
-            command += ` ${baseOid}`;
-            return command;
+        // 复制到剪贴板
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text).then(() => {
+                showAlert('已复制到剪贴板', 'success');
+            }).catch(() => {
+                showAlert('复制失败', 'error');
+            });
         }
         
         // 显示结果
@@ -774,29 +870,35 @@
         
         // 清空表单
         function clearForm() {
-            document.getElementById('table_type').value = '';
-            document.getElementById('base_oid').value = '';
+            document.getElementById('device_type').value = '';
+            document.getElementById('table_name').value = '';
+            document.getElementById('table_info').value = '';
             document.getElementById('index_values').value = '';
             document.getElementById('column_select').innerHTML = '<option value="all">所有列</option>';
             document.getElementById('output_format').value = 'oid';
             document.getElementById('target_ip').value = '';
-            document.getElementById('results').textContent = '生成的OID将在这里显示...';
+            document.getElementById('results').innerHTML = '生成的OID将在这里显示...';
+            document.getElementById('index_help').textContent = '输入表的索引值，支持数字和IP地址格式';
+            document.getElementById('column_help').textContent = '选择要生成OID的列，按住Ctrl多选';
+            currentTableInfo = null;
         }
         
         // 清空结果
         function clearResults() {
-            document.getElementById('results').textContent = '生成的OID将在这里显示...';
+            document.getElementById('results').innerHTML = '生成的OID将在这里显示...';
         }
         
         // 导出结果
         function exportResults() {
-            const results = document.getElementById('results').textContent;
-            if (!results || results === '生成的OID将在这里显示...') {
+            const results = document.getElementById('results');
+            const resultsText = results.textContent || results.innerText;
+            
+            if (!resultsText || resultsText === '生成的OID将在这里显示...') {
                 showAlert('没有可导出的结果', 'error');
                 return;
             }
             
-            const blob = new Blob([results], { type: 'text/plain' });
+            const blob = new Blob([resultsText], { type: 'text/plain' });
             const url = window.URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
@@ -821,15 +923,6 @@
             }
         }
         
-        // 页面加载时初始化
-        document.addEventListener('DOMContentLoaded', () => {
-            // 添加回车键支持
-            document.getElementById('index_values').addEventListener('keydown', (e) => {
-                if (e.ctrlKey && e.key === 'Enter') {
-                    generateOIDs();
-                }
-            });
-        });
     </script>
 </body>
 </html>

@@ -300,6 +300,25 @@
                     </a>
                 </div>
                 
+                <!-- MIB文件管理器 -->
+                <div class="tool-card">
+                    <span class="tool-icon">📋</span>
+                    <h3 class="tool-title">{{ _('MIB文件管理器') }}</h3>
+                    <p class="tool-description">
+                        {{ _('管理设备类型和MIB文件，支持按设备类型组织和管理MIB文件库') }}
+                    </p>
+                    <ul class="tool-features">
+                        <li>{{ _('预置DC 908, OSN 1800, OSN 9800设备类型') }}</li>
+                        <li>{{ _('自定义设备类型支持') }}</li>
+                        <li>{{ _('MIB文件上传和关联管理') }}</li>
+                        <li>{{ _('文件版本控制和备份') }}</li>
+                    </ul>
+                    <a href="/mib-management" class="tool-link">
+                        <span>{{ _('开始管理') }}</span>
+                        <span>→</span>
+                    </a>
+                </div>
+                
                 <div class="tool-card coming-soon">
                     <span class="tool-icon">🔍</span>
                     <h3 class="tool-title">{{ _('网络扫描器') }}</h3>
@@ -341,9 +360,10 @@
         <div class="footer">
             <p>{{ _('© 2024 网络工具集 - 专业的网络管理解决方案') }}</p>
             <p>
-                <a href="/mib-parser">{{ _('MIB文件解析器') }}</a> | 
-                <a href="/oid-calculator">{{ _('SNMP命令生成器') }}</a> | 
-                <a href="/mib-oid-generator">{{ _('MIB OID生成器') }}</a> | 
+                <a href="/mib-parser">{{ _('MIB文件解析器') }}</a> |
+                <a href="/oid-calculator">{{ _('SNMP命令生成器') }}</a> |
+                <a href="/mib-oid-generator">{{ _('MIB OID生成器') }}</a> |
+                <a href="/mib-management">{{ _('MIB文件管理器') }}</a> |
                 <span style="color: #9ca3af;">{{ _('更多工具开发中') }}</span>
             </p>
         </div>
