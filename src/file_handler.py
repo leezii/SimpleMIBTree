@@ -27,8 +27,13 @@ def extract_zip_file(zip_file):
             for file_info in zip_ref.infolist():
                 filename = file_info.filename
                 
-                # Skip directories and dangerous files
-                if filename.endswith('/') or '..' in filename or filename.startswith('/'):
+                # Skip directories, dangerous files, and macOS system files
+                if (filename.endswith('/') or
+                    '..' in filename or
+                    filename.startswith('/') or
+                    '__MACOSX' in filename or
+                    filename.startswith('._') or
+                    filename.endswith('/.DS_Store')):
                     continue
                 
                 # Check if file extension is MIB file
