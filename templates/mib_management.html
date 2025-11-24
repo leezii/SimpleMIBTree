@@ -590,6 +590,25 @@
                     </div>
                 </div>
             </section>
+            
+            <!-- 解析结果区域 -->
+            <section class="section" id="parsed-results-section" style="display: none;">
+                <div class="section-header">
+                    <h2 class="section-title">{{ _('解析结果') }}</h2>
+                    <div class="header-actions">
+                        <button class="btn" id="view-results-btn">
+                            👁️ {{ _('查看结果') }}
+                        </button>
+                        <button class="btn btn-secondary" id="delete-results-btn">
+                            🗑️ {{ _('删除结果') }}
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="results-summary" id="results-summary">
+                    <!-- 解析结果摘要将通过JavaScript动态生成 -->
+                </div>
+            </section>
         </div>
     </div>
     
@@ -715,7 +734,7 @@
             // 刷新按钮
             document.getElementById('refresh-files-btn').addEventListener('click', () => {
                 if (currentDeviceId) {
-                    loadMIBFiles(currentDeviceId);
+                    refreshMIBFiles(currentDeviceId);
                 }
             });
             
@@ -729,6 +748,19 @@
             confirmModal.addEventListener('click', (e) => {
                 if (e.target === confirmModal) {
                     hideConfirmModal();
+                }
+            });
+            
+            // 解析结果相关事件
+            document.getElementById('view-results-btn').addEventListener('click', () => {
+                if (currentDeviceId) {
+                    viewParsedResults(currentDeviceId);
+                }
+            });
+            
+            document.getElementById('delete-results-btn').addEventListener('click', () => {
+                if (currentDeviceId) {
+                    showDeleteConfirmModal('results', currentDeviceId, currentDeviceId);
                 }
             });
         }
@@ -845,6 +877,9 @@
             currentDeviceId = deviceId;
             mibFilesSection.style.display = 'block';
             loadMIBFiles(deviceId);
+            
+            // 检查是否有解析结果
+            checkParsedResults(deviceId);
         }
         
         // 加载MIB文件列表
@@ -1055,6 +1090,65 @@
             }
         }
         
+        // 刷新MIB文件
+        async function refreshMIBFiles(deviceId) {
+            try {
+                showLoading('{{ _("刷新MIB文件...") }}');
+                updateProgress(10, '{{ _("准备刷新...") }}');
+                
+                const response = await fetch('/api/mib-files/refresh', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ device_id: deviceId })
+                });
+                
+                updateProgress(50, '{{ _("处理中...") }}');
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    const result = data.data;
+                    updateProgress(90, '{{ _("完成处理...") }}');
+                    
+                    let message = '{{ _("刷新完成") }}！\n';
+                    message += `{{ _("清理文件") }}: ${result.cleanup_result.cleaned_count}\n`;
+                    message += `{{ _("解析文件") }}: ${result.parse_result.parsed_count}/${result.parse_result.total_files}\n`;
+                    message += `{{ _("提取表") }}: ${result.parse_result.total_tables}\n`;
+                    message += `{{ _("提取对象") }}: ${result.parse_result.total_objects}`;
+                    
+                    showAlert(message, 'success');
+                    
+                    // 重新加载文件列表
+                    await loadMIBFiles(deviceId);
+                    updateProgress(100, '{{ _("刷新完成") }}');
+                } else {
+                    showAlert(data.error.message, 'error');
+                }
+            } catch (error) {
+                showAlert('{{ _("刷新失败") }}: ' + error.message, 'error');
+            } finally {
+                setTimeout(() => {
+                    hideLoading();
+                }, 1000);
+            }
+        }
+        
+        // 进度更新函数
+        function updateProgress(percent, message) {
+            const progressFill = document.getElementById('progress-fill');
+            const loadingMessage = document.getElementById('loading-message');
+            
+            if (progressFill) {
+                progressFill.style.width = percent + '%';
+            }
+            
+            if (loadingMessage) {
+                loadingMessage.textContent = message;
+            }
+        }
+        
         // 显示添加设备类型模态框
         function showAddDeviceTypeModal() {
             editingDeviceId = null;
@@ -1145,6 +1239,8 @@
             let message = '';
             if (type === 'device') {
                 message = `{{ _('确定要删除设备类型') }} "${name}" {{ _('吗？此操作将同时删除所有关联的MIB文件，且不可撤销。') }}`;
+            } else if (type === 'results') {
+                message = `{{ _('确定要删除设备类型') }} "${name}" {{ _('的解析结果吗？此操作不可撤销。') }}`;
             } else {
                 message = `{{ _('确定要删除文件') }} "${name}" {{ _('吗？此操作不可撤销。') }}`;
             }
@@ -1193,6 +1289,9 @@
                             currentDeviceId = null;
                             mibFilesSection.style.display = 'none';
                         }
+                    } else if (deleteType === 'results') {
+                        // 删除解析结果后重新检查
+                        checkParsedResults(currentDeviceId);
                     } else {
                         loadMIBFiles(currentDeviceId);
                     }
@@ -1206,15 +1305,122 @@
             }
         }
         
-        // 显示加载状态
-        function showLoading(message = '{{ _('处理中...') }}') {
-            document.getElementById('loading-message').textContent = message;
-            loadingOverlay.classList.add('show');
+        // 检查解析结果
+        async function checkParsedResults(deviceId) {
+            try {
+                const response = await fetch(`/api/device-types/${deviceId}/parsed-results`);
+                const data = await response.json();
+                
+                const resultsSection = document.getElementById('parsed-results-section');
+                const resultsSummary = document.getElementById('results-summary');
+                
+                if (data.success && data.data.tables) {
+                    resultsSection.style.display = 'block';
+                    
+                    const tables = data.data.tables;
+                    const summary = `
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 20px;">
+                            <div style="background: #f8fafc; padding: 15px; border-radius: 8px; border-left: 4px solid #4f46e5;">
+                                <div style="font-size: 0.9rem; color: #64748b;">{{ _("解析时间") }}</div>
+                                <div style="font-size: 1.1rem; font-weight: 600; color: #1e293b;">${formatDate(tables.parsed_at)}</div>
+                            </div>
+                            <div style="background: #f8fafc; padding: 15px; border-radius: 8px; border-left: 4px solid #10b981;">
+                                <div style="font-size: 0.9rem; color: #64748b;">{{ _("表数量") }}</div>
+                                <div style="font-size: 1.1rem; font-weight: 600; color: #1e293b;">${tables.tables.length}</div>
+                            </div>
+                            <div style="background: #f8fafc; padding: 15px; border-radius: 8px; border-left: 4px solid #f59e0b;">
+                                <div style="font-size: 0.9rem; color: #64748b;">{{ _("解析文件") }}</div>
+                                <div style="font-size: 1.1rem; font-weight: 600; color: #1e293b;">${tables.summary.parsed_count}/${tables.summary.total_files}</div>
+                            </div>
+                        </div>
+                        <div style="background: #f1f5f9; padding: 15px; border-radius: 8px;">
+                            <h4 style="margin-bottom: 10px; color: #334155;">{{ _("最近解析的表") }}</h4>
+                            <div style="max-height: 200px; overflow-y: auto;">
+                                ${tables.tables.slice(0, 5).map(table => `
+                                    <div style="padding: 8px 0; border-bottom: 1px solid #e2e8f0;">
+                                        <div style="font-weight: 500; color: #1e293b;">${table.name}</div>
+                                        <div style="font-size: 0.85rem; color: #64748b;">OID: ${table.oid}</div>
+                                        <div style="font-size: 0.85rem; color: #64748b;">${table.description || '{{ _("无描述") }}'}</div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                    `;
+                    
+                    resultsSummary.innerHTML = summary;
+                } else {
+                    resultsSection.style.display = 'none';
+                }
+            } catch (error) {
+                console.error('检查解析结果失败:', error);
+            }
         }
         
-        // 隐藏加载状态
-        function hideLoading() {
-            loadingOverlay.classList.remove('show');
+        // 查看解析结果
+        async function viewParsedResults(deviceId) {
+            try {
+                showLoading('{{ _("加载解析结果...") }}');
+                
+                const response = await fetch(`/api/device-types/${deviceId}/parsed-results`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    // 在新窗口中显示解析结果
+                    const resultWindow = window.open('', '_blank');
+                    resultWindow.document.write(`
+                        <!DOCTYPE html>
+                        <html>
+                        <head>
+                            <title>{{ _('MIB解析结果') }}</title>
+                            <style>
+                                body { font-family: Arial, sans-serif; padding: 20px; }
+                                .summary { background: #f5f5f5; padding: 15px; border-radius: 5px; margin-bottom: 20px; }
+                                .table-list { max-height: 400px; overflow-y: auto; }
+                                table { width: 100%; border-collapse: collapse; }
+                                th, td { padding: 10px; text-align: left; border-bottom: 1px solid #ddd; }
+                                th { background: #f2f2f2; }
+                            </style>
+                        </head>
+                        <body>
+                            <h2>{{ _('MIB解析结果') }} - ${deviceId}</h2>
+                            <div class="summary">
+                                <h3>{{ _('解析摘要') }}</h3>
+                                <pre>${JSON.stringify(data.data.tables.summary, null, 2)}</pre>
+                            </div>
+                            <div class="table-list">
+                                <h3>{{ _('表列表') }}</h3>
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            <th>{{ _('表名') }}</th>
+                                            <th>{{ _('OID') }}</th>
+                                            <th>{{ _('描述') }}</th>
+                                            <th>{{ _('列数') }}</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        ${data.data.tables.tables.map(table => `
+                                            <tr>
+                                                <td>${table.name}</td>
+                                                <td>${table.oid}</td>
+                                                <td>${table.description || ''}</td>
+                                                <td>${table.columns ? table.columns.length : 0}</td>
+                                            </tr>
+                                        `).join('')}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </body>
+                        </html>
+                    `);
+                } else {
+                    showAlert(data.error.message, 'error');
+                }
+            } catch (error) {
+                showAlert('{{ _("加载解析结果失败") }}: ' + error.message, 'error');
+            } finally {
+                hideLoading();
+            }
         }
         
         // 显示提示消息
@@ -1261,6 +1467,29 @@
                 hour: '2-digit',
                 minute: '2-digit'
             });
+        }
+        
+        // 显示加载状态
+        function showLoading(message) {
+            const loadingOverlay = document.getElementById('loading-overlay');
+            const loadingMessage = document.getElementById('loading-message');
+            
+            if (loadingOverlay) {
+                loadingOverlay.classList.add('show');
+            }
+            
+            if (loadingMessage && message) {
+                loadingMessage.textContent = message;
+            }
+        }
+        
+        // 隐藏加载状态
+        function hideLoading() {
+            const loadingOverlay = document.getElementById('loading-overlay');
+            
+            if (loadingOverlay) {
+                loadingOverlay.classList.remove('show');
+            }
         }
     </script>
 </body>
