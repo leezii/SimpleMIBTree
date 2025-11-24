@@ -540,6 +540,72 @@ class MIBManager:
                 logger.info(f"删除旧备份: {backup_file}")
         except Exception as e:
             logger.warning(f"清理备份文件失败: {str(e)}")
+    
+    def cleanup_missing_files(self) -> Dict[str, Any]:
+        """
+        清理数据库中不存在于文件系统中的MIB文件记录
+        
+        Returns:
+            Dict包含清理结果统计信息
+        """
+        try:
+            data = self._load_data()
+            cleaned_files = []
+            total_files_before = 0
+            total_files_after = 0
+            
+            for device_id, device_data in data["device_types"].items():
+                mib_files = device_data.get("mib_files", [])
+                total_files_before += len(mib_files)
+                
+                # 过滤出实际存在的文件
+                valid_files = []
+                for file_info in mib_files:
+                    file_path = file_info.get("file_path", "")
+                    if file_path and os.path.exists(file_path):
+                        valid_files.append(file_info)
+                    else:
+                        cleaned_files.append({
+                            "device_id": device_id,
+                            "file_id": file_info.get("id"),
+                            "filename": file_info.get("filename"),
+                            "file_path": file_path
+                        })
+                        logger.warning(f"清理不存在的文件记录: {file_path}")
+                
+                # 更新设备数据
+                device_data["mib_files"] = valid_files
+                device_data["file_count"] = len(valid_files)
+                device_data["total_size"] = sum(f.get("file_size", 0) for f in valid_files)
+                device_data["updated_at"] = datetime.utcnow().isoformat()
+                total_files_after += len(valid_files)
+            
+            # 更新统计信息
+            data["statistics"]["total_files"] = total_files_after
+            data["statistics"]["total_size"] = sum(
+                device_data.get("total_size", 0)
+                for device_data in data["device_types"].values()
+            )
+            data["last_updated"] = datetime.utcnow().isoformat()
+            
+            self._save_data(data)
+            
+            logger.info(f"清理完成: 删除了 {len(cleaned_files)} 个不存在的文件记录")
+            
+            return {
+                "success": True,
+                "cleaned_count": len(cleaned_files),
+                "cleaned_files": cleaned_files,
+                "total_files_before": total_files_before,
+                "total_files_after": total_files_after
+            }
+            
+        except Exception as e:
+            logger.error(f"清理不存在文件失败: {str(e)}")
+            return {
+                "success": False,
+                "error": str(e)
+            }
 
 # 全局MIB管理器实例
 _mib_manager = None

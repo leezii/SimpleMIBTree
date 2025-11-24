@@ -7,6 +7,7 @@ from file_handler import validate_and_process_files, save_uploaded_file, cleanup
 from mib_parser import mib_parser, get_mib_parser
 from mib_manager import get_mib_manager, MIBManagementError
 from oid_generator import OIDGenerator
+from mib_result_saver import get_mib_result_saver
 
 logger = logging.getLogger(__name__)
 
@@ -751,6 +752,172 @@ def get_statistics():
             'error': {
                 'code': 'INTERNAL_ERROR',
                 'message': '获取统计信息失败',
+                'timestamp': datetime.utcnow().isoformat()
+            }
+        }), 500
+
+# MIB文件刷新API端点
+
+@main_bp.route('/api/mib-files/refresh', methods=['POST'])
+def refresh_mib_files():
+    """刷新MIB文件：清理不存在文件，解析全部文件，保存结果"""
+    try:
+        data = request.get_json() or {}
+        device_id = data.get('device_id')
+        
+        if not device_id:
+            return jsonify({
+                'success': False,
+                'error': {
+                    'code': 'DEVICE_ID_REQUIRED',
+                    'message': '设备类型ID是必需的',
+                    'timestamp': datetime.utcnow().isoformat()
+                }
+            }), 400
+        
+        # 获取管理器实例
+        mib_manager = get_mib_manager()
+        oid_generator = get_oid_generator()
+        result_saver = get_mib_result_saver()
+        
+        # 第一步：清理不存在的文件
+        logger.info(f"开始清理设备 {device_id} 的不存在文件记录")
+        cleanup_result = mib_manager.cleanup_missing_files()
+        
+        # 第二步：解析所有MIB文件
+        logger.info(f"开始解析设备 {device_id} 的所有MIB文件")
+        def progress_callback(current, total, message):
+            logger.info(f"解析进度: {current}/{total} - {message}")
+        
+        parse_result = oid_generator.parse_all_device_mibs(device_id, progress_callback)
+        
+        if not parse_result.get('success'):
+            return jsonify({
+                'success': False,
+                'error': {
+                    'code': 'PARSE_FAILED',
+                    'message': f'解析失败: {parse_result.get("error")}',
+                    'timestamp': datetime.utcnow().isoformat()
+                }
+            }), 500
+        
+        # 第三步：保存解析结果
+        logger.info(f"保存设备 {device_id} 的解析结果")
+        save_result = result_saver.save_parsed_results(device_id, parse_result)
+        
+        return jsonify({
+            'success': True,
+            'data': {
+                'device_id': device_id,
+                'cleanup_result': cleanup_result,
+                'parse_result': parse_result.get('summary', {}),
+                'save_result': save_result,
+                'timestamp': datetime.utcnow().isoformat()
+            },
+            'message': 'MIB文件刷新完成'
+        })
+        
+    except Exception as e:
+        logger.error(f"刷新MIB文件失败: {str(e)}")
+        return jsonify({
+            'success': False,
+            'error': {
+                'code': 'INTERNAL_ERROR',
+                'message': '刷新MIB文件失败',
+                'details': str(e),
+                'timestamp': datetime.utcnow().isoformat()
+            }
+        }), 500
+
+@main_bp.route('/api/device-types/<device_id>/parsed-results', methods=['GET'])
+def get_parsed_results(device_id):
+    """获取设备类型的解析结果"""
+    try:
+        result_saver = get_mib_result_saver()
+        result = result_saver.get_parsed_results(device_id)
+        
+        if not result.get('success'):
+            return jsonify({
+                'success': False,
+                'error': {
+                    'code': 'RESULTS_NOT_FOUND',
+                    'message': result.get('error', '没有找到解析结果'),
+                    'timestamp': datetime.utcnow().isoformat()
+                }
+            }), 404
+        
+        return jsonify({
+            'success': True,
+            'data': result,
+            'timestamp': datetime.utcnow().isoformat()
+        })
+        
+    except Exception as e:
+        logger.error(f"获取解析结果失败: {str(e)}")
+        return jsonify({
+            'success': False,
+            'error': {
+                'code': 'INTERNAL_ERROR',
+                'message': '获取解析结果失败',
+                'timestamp': datetime.utcnow().isoformat()
+            }
+        }), 500
+
+@main_bp.route('/api/device-types/<device_id>/parsed-results', methods=['DELETE'])
+def delete_parsed_results(device_id):
+    """删除设备类型的解析结果"""
+    try:
+        result_saver = get_mib_result_saver()
+        result = result_saver.delete_parsed_results(device_id)
+        
+        if not result.get('success'):
+            return jsonify({
+                'success': False,
+                'error': {
+                    'code': 'DELETE_FAILED',
+                    'message': result.get('error', '删除解析结果失败'),
+                    'timestamp': datetime.utcnow().isoformat()
+                }
+            }), 500
+        
+        return jsonify({
+            'success': True,
+            'data': result,
+            'message': '解析结果删除成功',
+            'timestamp': datetime.utcnow().isoformat()
+        })
+        
+    except Exception as e:
+        logger.error(f"删除解析结果失败: {str(e)}")
+        return jsonify({
+            'success': False,
+            'error': {
+                'code': 'INTERNAL_ERROR',
+                'message': '删除解析结果失败',
+                'timestamp': datetime.utcnow().isoformat()
+            }
+        }), 500
+
+@main_bp.route('/api/parsed-results', methods=['GET'])
+def list_parsed_results():
+    """列出所有设备类型的解析结果"""
+    try:
+        result_saver = get_mib_result_saver()
+        result = result_saver.list_parsed_results()
+        
+        return jsonify({
+            'success': True,
+            'data': result,
+            'timestamp': datetime.utcnow().isoformat()
+        })
+        
+    except Exception as e:
+        logger.error(f"列出解析结果失败: {str(e)}")
+        return jsonify({
+            'success': False,
+            'error': {
+                'code': 'INTERNAL_ERROR',
+                'message': '列出解析结果失败',
                 'timestamp': datetime.utcnow().isoformat()
             }
         }), 500

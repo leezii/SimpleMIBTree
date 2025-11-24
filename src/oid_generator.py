@@ -3,6 +3,7 @@ MIB表OID生成器模块
 用于根据MIB表结构和索引值生成对应的OID
 """
 
+import os
 import re
 import json
 from typing import Dict, List, Any, Optional, Tuple
@@ -535,3 +536,155 @@ class OIDGenerator:
                 "index_values": ["1-1-1"]  # 示例单板EID
             }
         }
+    
+    def parse_all_device_mibs(self, device_id: str, progress_callback=None) -> Dict[str, Any]:
+        """
+        解析指定设备类型的所有MIB文件
+        
+        Args:
+            device_id: 设备类型ID
+            progress_callback: 进度回调函数，接收(current, total, message)参数
+            
+        Returns:
+            包含解析结果的字典
+        """
+        try:
+            # 获取设备类型的MIB文件
+            device_info = self.mib_manager.get_device_type(device_id)
+            if not device_info:
+                return {"success": False, "error": f"设备类型 {device_id} 不存在"}
+            
+            mib_files = device_info.get('mib_files', [])
+            if not mib_files:
+                return {"success": False, "error": f"设备类型 {device_id} 没有MIB文件"}
+            
+            all_tables = []
+            all_objects = []
+            parsed_files = []
+            failed_files = []
+            
+            total_files = len(mib_files)
+            
+            for i, file_info in enumerate(mib_files):
+                if progress_callback:
+                    progress_callback(i + 1, total_files, f"解析文件: {file_info.get('original_name')}")
+                
+                file_path = file_info.get('file_path', '')
+                if not file_path or not os.path.exists(file_path):
+                    failed_files.append({
+                        "file_id": file_info.get("id"),
+                        "filename": file_info.get("original_name"),
+                        "error": "文件不存在"
+                    })
+                    continue
+                
+                try:
+                    # 解析MIB文件
+                    mib_data = self.mib_parser.parse_mib_file(file_path)
+                    if not mib_data or not mib_data.get('success'):
+                        failed_files.append({
+                            "file_id": file_info.get("id"),
+                            "filename": file_info.get("original_name"),
+                            "error": mib_data.get('error', '解析失败') if mib_data else '解析返回空结果'
+                        })
+                        continue
+                    
+                    # 提取表信息
+                    self._current_file_path = file_path
+                    file_tables = self._extract_tables_from_mib(mib_data)
+                    all_tables.extend(file_tables)
+                    
+                    # 收集所有对象用于OID映射
+                    if 'tree' in mib_data:
+                        self._collect_objects_from_tree(mib_data['tree'], all_objects, file_info)
+                    
+                    parsed_files.append({
+                        "file_id": file_info.get("id"),
+                        "filename": file_info.get("original_name"),
+                        "tables_count": len(file_tables),
+                        "objects_count": len([obj for obj in all_objects if obj.get('source_file') == file_info.get('original_name')])
+                    })
+                    
+                except Exception as e:
+                    print(f"解析文件 {file_info.get('original_name')} 失败: {str(e)}")
+                    failed_files.append({
+                        "file_id": file_info.get("id"),
+                        "filename": file_info.get("original_name"),
+                        "error": str(e)
+                    })
+            
+            # 构建完整的OID映射
+            oid_mapping = self._build_oid_mapping(all_objects)
+            
+            return {
+                "success": True,
+                "device_id": device_id,
+                "parsed_files": parsed_files,
+                "failed_files": failed_files,
+                "total_tables": len(all_tables),
+                "total_objects": len(all_objects),
+                "tables": [self._table_to_dict(table) for table in all_tables],
+                "oid_mapping": oid_mapping,
+                "summary": {
+                    "total_files": total_files,
+                    "parsed_count": len(parsed_files),
+                    "failed_count": len(failed_files)
+                }
+            }
+            
+        except Exception as e:
+            print(f"解析设备MIB文件失败: {str(e)}")
+            return {"success": False, "error": str(e)}
+    
+    def _collect_objects_from_tree(self, tree_nodes, all_objects, file_info):
+        """从树节点中收集所有对象"""
+        for node in tree_nodes:
+            obj = {
+                "text": node.get('text', ''),
+                "oid": node.get('oid', ''),
+                "numeric_oid": node.get('numeric_oid', ''),
+                "type": node.get('type', ''),
+                "source_file": file_info.get('original_name'),
+                "source_file_id": file_info.get('id')
+            }
+            all_objects.append(obj)
+            
+            # 递归处理子节点
+            children = node.get('children', [])
+            if children:
+                self._collect_objects_from_tree(children, all_objects, file_info)
+    
+    def _build_oid_mapping(self, all_objects):
+        """构建OID映射字典"""
+        oid_mapping = {}
+        
+        for obj in all_objects:
+            numeric_oid = obj.get('numeric_oid', '')
+            if numeric_oid and numeric_oid != 'N/A':
+                oid_mapping[numeric_oid] = {
+                    "name": obj.get('text', ''),
+                    "type": obj.get('type', ''),
+                    "source_file": obj.get('source_file', ''),
+                    "oid": obj.get('oid', '')
+                }
+        
+        return oid_mapping
+
+# 全局OID生成器实例
+_oid_generator = None
+
+def get_oid_generator():
+    """获取全局OID生成器实例"""
+    global _oid_generator
+    if _oid_generator is None:
+        try:
+            from .mib_manager import get_mib_manager
+            from .mib_parser import get_mib_parser
+        except ImportError:
+            from mib_manager import get_mib_manager
+            from mib_parser import get_mib_parser
+        
+        mib_manager = get_mib_manager()
+        parser = get_mib_parser()
+        _oid_generator = OIDGenerator(mib_manager, parser)
+    return _oid_generator
